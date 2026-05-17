@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oahu Lodging Dashboard — Sept/Oct 2026</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card: #ffffff;
+    --border: #e5e0d8;
+    --text: #1a1a1a;
+    --muted: #6b6560;
+    --accent: #1a4a3a;
+    --accent-light: #e8f0ec;
+    --gold: #b8860b;
+    --gold-light: #fdf8ed;
+    --warn: #c0392b;
+    --warn-light: #fdf0ee;
+    --green: #2e7d52;
+    --green-light: #eaf4ee;
+    --blue: #1a3a5c;
+    --blue-light: #eef2f8;
+    --score-bar: #d4cfc7;
+    --score-fill: #1a4a3a;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); font-family: var(--font); color: var(--text); font-size: 14px; line-height: 1.5; }
+
+  /* HEADER */
+  .header { background: var(--accent); color: white; padding: 24px 32px; }
+  .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .header .subtitle { opacity: 0.75; font-size: 13px; margin-top: 4px; }
+  .trip-meta { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+  .trip-pill { background: rgba(255,255,255,0.12); padding: 5px 12px; border-radius: 20px; font-size: 12px; }
+
+  /* CONTROLS */
+  .controls { padding: 16px 32px; background: white; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .controls label { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .controls select { border: 1px solid var(--border); padding: 6px 10px; border-radius: 6px; font-size: 13px; background: white; cursor: pointer; }
+  .filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; background: white; color: var(--text); transition: all 0.15s; }
+  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .separator { width: 1px; height: 20px; background: var(--border); }
+
+  /* GRID */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; padding: 24px 32px; }
+
+  /* CARD */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow 0.2s; }
+  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .card.hidden { display: none; }
+
+  .card-header { padding: 18px 20px 14px; border-bottom: 1px solid var(--border); }
+  .card-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .property-name { font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .composite-badge { background: var(--accent); color: white; border-radius: 8px; padding: 4px 10px; font-size: 15px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+  .tier-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .tag { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+  .tag-tier { background: var(--accent-light); color: var(--accent); }
+  .tag-location { background: var(--blue-light); color: var(--blue); }
+  .tag-budget { background: var(--gold-light); color: var(--gold); }
+  .tag-value { background: var(--green-light); color: var(--green); font-weight: 600; }
+  .tag-warn { background: var(--warn-light); color: var(--warn); }
+
+  /* SCORES */
+  .scores-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .scores-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 10px; }
+  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .score-label { font-size: 12px; color: var(--muted); width: 130px; flex-shrink: 0; }
+  .score-bar-wrap { flex: 1; height: 6px; background: var(--score-bar); border-radius: 3px; overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 3px; background: var(--score-fill); transition: width 0.4s; }
+  .score-val { font-size: 12px; font-weight: 600; width: 28px; text-align: right; }
+  .score-val.high { color: var(--green); }
+  .score-val.mid { color: var(--gold); }
+  .score-val.low { color: var(--warn); }
+
+  /* REVIEWS */
+  .reviews-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .review-confidence { font-size: 12px; color: var(--muted); }
+  .confidence-badge { padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+  .conf-high { background: var(--green-light); color: var(--green); }
+  .conf-med { background: var(--gold-light); color: var(--gold); }
+  .theme-list { display: flex; flex-direction: column; gap: 4px; }
+  .theme { display: flex; gap: 6px; font-size: 12px; align-items: flex-start; }
+  .theme-icon { flex-shrink: 0; margin-top: 1px; }
+  .family-signal { margin-top: 8px; padding: 8px 10px; background: #f0f7ff; border-radius: 6px; font-size: 12px; color: #1a3a5c; }
+  .family-signal strong { display: block; font-size: 11px; margin-bottom: 2px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.3px; }
+
+  /* PROGRAMS */
+  .programs-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .program-list { display: flex; flex-direction: column; gap: 6px; }
+  .program-row { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; }
+  .prog-badge { padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .prog-fhr { background: #1a1a2e; color: #d4af37; }
+  .prog-chase { background: #003087; color: white; }
+  .prog-hyatt { background: #6b2d8b; color: white; }
+  .prog-bonvoy { background: #002855; color: #c8a84b; }
+  .prog-hilton { background: #00338d; color: #cda323; }
+  .prog-double { background: #2e7d52; color: white; }
+  .benefit-value { margin-top: 6px; padding: 6px 10px; background: var(--green-light); border-radius: 5px; font-size: 12px; color: var(--green); font-weight: 600; }
+
+  /* COST */
+  .cost-section { padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .cost-table { width: 100%; font-size: 12px; }
+  .cost-table tr td { padding: 3px 0; }
+  .cost-table tr td:last-child { text-align: right; color: var(--muted); }
+  .cost-divider td { border-top: 1px solid var(--border); padding-top: 6px !important; }
+  .cost-gross td { font-weight: 600; color: var(--text); }
+  .cost-gross td:last-child { color: var(--text); }
+  .cost-benefit td { color: var(--green); }
+  .cost-effective { background: var(--accent-light); border-radius: 6px; padding: 8px 10px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .cost-effective .label { font-size: 12px; font-weight: 600; color: var(--accent); }
+  .cost-effective .amount { font-size: 16px; font-weight: 700; color: var(--accent); }
+  .cost-effective .per-night { font-size: 11px; color: var(--accent); opacity: 0.7; }
+
+  /* LINKS */
+  .links-section { padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .link-btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none; border: 1px solid; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s; }
+  .link-primary { background: var(--accent); color: white; border-color: var(--accent); }
+  .link-primary:hover { background: #133a2c; }
+  .link-secondary { background: white; color: var(--text); border-color: var(--border); }
+  .link-secondary:hover { background: var(--bg); }
+  .link-review { background: white; color: var(--blue); border-color: var(--blue-light); }
+
+  /* SUMMARY TABLE */
+  .summary-section { padding: 24px 32px; }
+  .summary-section h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .summary-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); font-size: 13px; }
+  .summary-table th { background: var(--accent); color: white; padding: 10px 14px; text-align: left; font-weight: 500; font-size: 12px; }
+  .summary-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .summary-table tr:hover td { background: var(--bg); }
+  .rank-num { font-weight: 700; color: var(--accent); }
+
+  /* NOTE */
+  .disclaimer { padding: 0 32px 24px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+  @media (max-width: 500px) {
+    .grid { grid-template-columns: 1fr; padding: 12px; }
+    .header { padding: 16px; }
+    .controls { padding: 12px; }
+    .summary-section { padding: 16px; }
+    .summary-table { font-size: 11px; }
+    .summary-table th, .summary-table td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🌺 Oahu Lodging Shortlist</h1>
+  <div class="subtitle">Personalized evaluation — skill-generated, criteria-driven</div>
+  <div class="trip-meta">
+    <span class="trip-pill">📍 Oahu, Hawaii</span>
+    <span class="trip-pill">📅 Late Sept – Early Oct 2026</span>
+    <span class="trip-pill">🌙 4 nights</span>
+    <span class="trip-pill">👨‍👩‍👧 2 adults + 1 toddler</span>
+    <span class="trip-pill">🏊 Pool required</span>
+    <span class="trip-pill">💳 Amex FHR · Chase The Edit · Bonvoy · Hyatt · Hilton</span>
+  </div>
+</div>
+
+<div class="controls">
+  <label>Sort by:</label>
+  <select id="sortSelect" onchange="sortCards()">
+    <option value="composite">Composite Score</option>
+    <option value="effective">Effective Nightly Rate</option>
+    <option value="family">Family Fit Score</option>
+    <option value="gross">Gross Total (lowest first)</option>
+  </select>
+  <div class="separator"></div>
+  <label>Filter:</label>
+  <button class="filter-btn active" onclick="filterCards('all', this)">All (7)</button>
+  <button class="filter-btn" onclick="filterCards('waikiki', this)">Waikiki</button>
+  <button class="filter-btn" onclick="filterCards('ko-olina', this)">Ko Olina</button>
+  <button class="filter-btn" onclick="filterCards('value', this)">⭐ Value Finds</button>
+  <button class="filter-btn" onclick="filterCards('fhr', this)">Amex FHR</button>
+</div>
+
+<div class="grid" id="cardGrid">
+
+<!-- CARD 1: Four Seasons Ko Olina -->
+<div class="card" data-composite="9.2" data-effective="915" data-family="10" data-gross="4139" data-zone="ko-olina" data-value="false" data-fhr="true">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">Four Seasons Resort Oahu<br>at Ko Olina</div>
+      <div class="composite-badge">9.2</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Classic Luxury Resort</span>
+      <span class="tag tag-location">Ko Olina · West Side</span>
+      <span class="tag tag-budget">Luxury Tier</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:100%"></div></div><span class="score-val high">10</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:100%"></div></div><span class="score-val high">10</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.8 / 5 · 800+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Pool & lagoon experience</strong> — multiple pools including dedicated toddler Keiki Pool; private swimmable lagoon with calm, shallow water praised universally</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Proactive service</strong> — staff attentiveness and anticipatory service consistently the #1 positive theme across recent reviews</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Family infrastructure</strong> — free Kids for All Seasons club, cribs pre-set, beach gear available, high chairs, sun care at pools</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Remote from Waikiki</strong> — Ko Olina is 30–40 min west; car needed for exploring; not a concern if resort-based is the intent</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Price premium</strong> — consistently noted as expensive even by luxury-accustomed guests; worth it per most, but sticker shock is real</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>Reviewers with toddlers cite the shallow lagoon and Keiki Pool as standouts. Cribs, rails, and baby toiletries arrive pre-set. Unanimously family-recommended among luxury options on Oahu.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout, noon early check-in when available, room upgrade when available</span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$480 · ($380 breakfast + $100 credit)</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$900/night × 4)</td><td>$3,600</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$539</td></tr>
+      <tr><td>Resort fee</td><td>$0 (FS does not charge resort fees)</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$4,139</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR breakfast ($95/day × 4)</td><td>−$380</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR property credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after FHR benefits</div></div>
+      <div style="text-align:right"><div class="amount">$3,659</div><div class="per-night">$915 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.fourseasons.com/oahu/" target="_blank" class="link-btn link-primary">🔗 Book Direct</a>
+    <a href="https://www.americanexpress.com/en-us/travel/discover/property/Hawaii-US/Kapolei/four-seasons-resort-oahu-at-ko-olina" target="_blank" class="link-btn link-secondary">Amex FHR</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60654-d8684459-Reviews-Four_Seasons_Resort_Oahu_At_Ko_Olina-Kapolei_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Four+Seasons+Resort+Oahu+Ko+Olina" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 2: JW Marriott Ihilani -->
+<div class="card" data-composite="7.7" data-effective="586" data-family="9" data-gross="2344" data-zone="ko-olina" data-value="true" data-fhr="false">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">JW Marriott Ihilani Resort<br>& Spa at Ko Olina</div>
+      <div class="composite-badge">7.7</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Classic Luxury Resort</span>
+      <span class="tag tag-location">Ko Olina · West Side</span>
+      <span class="tag tag-budget">Premium Tier</span>
+      <span class="tag tag-value">⭐ Value Find</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val high">7</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.4 / 5 · 3,500+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Zero-entry pool</strong> — 3,200 sq ft pool with zero-entry design is one of the most praised toddler-friendly pool setups in Hawaii</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Calm lagoon access</strong> — Ko Olina lagoon ideal for toddlers, swimmable and sheltered; shared with adjacent resorts</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Space & value</strong> — rooms spacious, resort grounds extensive, consistently noted as excellent value for Ko Olina location</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Design feeling dated</strong> — some reviewers note the property feels less contemporary vs. Four Seasons next door</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Car essential</strong> — same Ko Olina distance caveat; nothing walkable beyond the resort complex</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>Toddler-specific reviews highlight the zero-entry pool as a major differentiator — gradual water entry is genuinely safer and less stressful. Licensed kids program on-site. Crib requests fulfilled reliably.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-bonvoy">BONVOY</span><span>Points earning, room upgrades based on status tier, Titanium/Ambassador 4pm late checkout</span></div>
+    </div>
+    <div class="benefit-value" style="background:#f0f4ff; color:#002855;">Note: No Amex FHR or Chase The Edit breakfast benefit here — points/status value only. Verify current Bonvoy status tier for upgrade eligibility.</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$475/night × 4)</td><td>$1,900</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$284</td></tr>
+      <tr><td>Resort fee (~$40/night × 4)</td><td>$160</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$2,344</td></tr>
+      <tr><td colspan="2" style="color:var(--muted); font-style:italic;">No FHR/Edit breakfast credit applicable</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">Bonvoy points only</div></div>
+      <div style="text-align:right"><div class="amount">$2,344</div><div class="per-night">$586 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/overview/" target="_blank" class="link-btn link-primary">🔗 Book Direct</a>
+    <a href="https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/overview/" target="_blank" class="link-btn link-secondary">Marriott Bonvoy</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60654-d114082-Reviews-JW_Marriott_Ihilani_Resort_Spa_At_Ko_Olina-Kapolei_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/JW+Marriott+Ihilani+Ko+Olina+Oahu" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 3: Halekulani -->
+<div class="card" data-composite="8.1" data-effective="718" data-family="5" data-gross="3334" data-zone="waikiki" data-value="false" data-fhr="false">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">Halekulani Hotel</div>
+      <div class="composite-badge">8.1</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Upscale Independent</span>
+      <span class="tag tag-location">Waikiki Beachfront</span>
+      <span class="tag tag-budget">Luxury Tier</span>
+      <span class="tag tag-warn">⚠ Lower Family Fit</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:50%"></div></div><span class="score-val low">5</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.7 / 5 · 2,000+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Iconic orchid pool</strong> — the mosaic orchid pool is consistently cited as one of the most beautiful hotel pools in Hawaii; less crowded than resort pools</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Service excellence</strong> — staff remembered guest names, preferences, and went beyond expectations; among the best service scores on Oahu</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>No resort fee</strong> — confirmed no resort fee, unusual for Waikiki; includes morning yoga, beach access, personal concierge</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Quiet / adults-oriented atmosphere</strong> — reviewers describe the vibe as serene and intimate; not a lively, activity-filled resort environment</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Limited family infrastructure</strong> — no dedicated kids area, kids club, or toddler pool; pool is single, beautiful, but not toddler-optimized</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>Families report the experience is manageable but not purpose-built for toddlers. The pool works but lacks shallow areas. Works best if you value Waikiki walkability and exceptional service over family resort amenities. Best for parents who prioritize their own experience alongside the toddler's.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-chase">THE EDIT</span><span>Daily breakfast for 2, $100 experience credit, room upgrade when available, flexible check-in/checkout — <em>verify current Edit participation before booking</em></span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$460 · ($360 breakfast + $100 credit) — subject to Edit program verification</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$725/night × 4)</td><td>$2,900</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$434</td></tr>
+      <tr><td>Resort fee</td><td>$0 (confirmed no resort fee)</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$3,334</td></tr>
+      <tr class="cost-benefit"><td>− The Edit breakfast ($90/day × 4)</td><td>−$360</td></tr>
+      <tr class="cost-benefit"><td>− The Edit property credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after Edit benefits (verify)</div></div>
+      <div style="text-align:right"><div class="amount">$2,874</div><div class="per-night">$718 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.halekulani.com/" target="_blank" class="link-btn link-primary">🔗 Book Direct</a>
+    <a href="https://www.chase.com/travel" target="_blank" class="link-btn link-secondary">Chase The Edit</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d90015-Reviews-Halekulani_Hotel-Honolulu_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Halekulani+Hotel+Waikiki" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 4: Royal Hawaiian -->
+<div class="card" data-composite="7.5" data-effective="691" data-family="6" data-gross="3224" data-zone="waikiki" data-value="false" data-fhr="true">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">The Royal Hawaiian<br><span style="font-size:13px; font-weight:400; color:var(--muted)">A Luxury Collection Resort, Waikiki</span></div>
+      <div class="composite-badge">7.5</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Classic Luxury Resort</span>
+      <span class="tag tag-location">Waikiki Beachfront</span>
+      <span class="tag tag-budget">Premium–Luxury</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val mid">6</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.3 / 5 · 4,000+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Historic character & location</strong> — the Pink Palace is architecturally iconic; prime Waikiki beachfront position is arguably the best on the strip</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Sheraton pool access</strong> — guests access Helumoa Playground with Sheraton Waikiki, including two waterslides and fountain area for kids</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Dual program benefits</strong> — Amex FHR AND Marriott Bonvoy both apply; one of the stronger double-value stories on this list</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Own pool is small</strong> — Royal Hawaiian's main pool frequently flagged as too small, limited chairs, crowded; shared Sheraton pool is large but can be chaotic and cold</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Inconsistent service</strong> — multiple recent reviews note service variability; not at Four Seasons standard despite comparable pricing</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>Kids enjoy the Sheraton waterslides nearby but the pool situation is genuinely limiting for a toddler trip where pool time is core. The beach access is excellent. Best if you want Waikiki energy and the historic experience over resort-style pool infrastructure.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-double">DOUBLE STACK</span><span style="font-weight:600; color:var(--green)">Both Amex FHR AND Marriott Bonvoy apply</span></div>
+      <div class="program-row"><span class="prog-badge prog-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout, room upgrade when available</span></div>
+      <div class="program-row"><span class="prog-badge prog-bonvoy">BONVOY</span><span>Points earning on full rate + Luxury Collection elite recognition; $20/person Continental breakfast credit for elites</span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$460 FHR benefits + Bonvoy points (variable by status)</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$675/night × 4)</td><td>$2,700</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$404</td></tr>
+      <tr><td>Resort fee (~$30/night × 4)</td><td>$120</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$3,224</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR property credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after FHR benefits + Bonvoy points</div></div>
+      <div style="text-align:right"><div class="amount">$2,764</div><div class="per-night">$691 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.marriott.com/en-us/hotels/hnllc-the-royal-hawaiian-a-luxury-collection-resort-waikiki/overview/" target="_blank" class="link-btn link-primary">🔗 Book Direct / Bonvoy</a>
+    <a href="https://www.americanexpress.com/en-us/travel/fine-hotels-and-resorts" target="_blank" class="link-btn link-secondary">Amex FHR</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d114024-Reviews-The_Royal_Hawaiian_a_Luxury_Collection_Resort_Waikiki-Honolulu_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Royal+Hawaiian+Hotel+Waikiki" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 5: Kahala -->
+<div class="card" data-composite="7.1" data-effective="546" data-family="6" data-gross="2644" data-zone="waikiki" data-value="true" data-fhr="true">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">The Kahala Hotel & Resort</div>
+      <div class="composite-badge">7.1</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Upscale Independent</span>
+      <span class="tag tag-location">Kahala · 17 min from Waikiki</span>
+      <span class="tag tag-budget">Premium Tier</span>
+      <span class="tag tag-value">⭐ Value Find</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val mid">6</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val mid">6</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.4 / 5 · 2,800+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Secluded, quiet luxury</strong> — removed from Waikiki noise; the atmosphere is consistently described as genuinely peaceful and unhurried</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Dolphin Quest lagoon</strong> — 26,000 sq ft dolphin habitat; dolphin interaction experiences praised as unique and memorable by families</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>No resort fee</strong> — confirmed no resort fee; includes complimentary lei greeting and resort shuttle to Waikiki</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Pool condition concerns</strong> — recent reviews flag aging pool infrastructure: crumbling concrete edges, tile needing replacement; pool is also small</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Car required</strong> — secluded location is the appeal but requires a car for any Waikiki access; adds logistics cost</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>The dolphin lagoon is a memorable experience for older kids, but for toddlers who need serious pool time, the pool situation is a concern. Kids pool exists but the flagged maintenance issues are worth monitoring. Good choice if the secluded vibe matters more than pool infrastructure.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout — note: FHR upgrades at Kahala are limited to one category when available</span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$460 · ($360 breakfast + $100 credit)</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$575/night × 4)</td><td>$2,300</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$344</td></tr>
+      <tr><td>Resort fee</td><td>$0 (confirmed no resort fee)</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$2,644</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR property credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after FHR benefits</div></div>
+      <div style="text-align:right"><div class="amount">$2,184</div><div class="per-night">$546 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.kahalaresort.com/" target="_blank" class="link-btn link-primary">🔗 Book Direct</a>
+    <a href="https://www.americanexpress.com/en-us/travel/discover/property/Hawaii-US/Honolulu/the-kahala-hotel--resort" target="_blank" class="link-btn link-secondary">Amex FHR</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d114008-Reviews-The_Kahala_Hotel_Resort-Honolulu_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Kahala+Hotel+Resort+Honolulu" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 6: Ka La'i (LXR) -->
+<div class="card" data-composite="7.4" data-effective="644" data-family="4" data-gross="3034" data-zone="waikiki" data-value="false" data-fhr="true">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">Ka Laʻi Waikiki Beach<br><span style="font-size:13px; font-weight:400; color:var(--muted)">LXR Hotels & Resorts · Hilton</span></div>
+      <div class="composite-badge">7.4</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Lifestyle Brand</span>
+      <span class="tag tag-location">Waikiki</span>
+      <span class="tag tag-budget">Premium–Luxury</span>
+      <span class="tag tag-warn">⚠ Adults-Leaning</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val high">9</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:40%"></div></div><span class="score-val low">4</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.5 / 5 · 300+ reviews</span>
+      <span class="confidence-badge conf-med">Medium Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Exceptional service & attention</strong> — Diamond Hilton Honors guests report best-in-class recognition; staff described as going meaningfully beyond standard</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Chic, boutique design</strong> — recently renovated (completed early 2026); strong design identity, feels different from standard Waikiki hotels</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Double program stack</strong> — Hilton Honors AND Amex FHR both confirmed; strong combined benefit value</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Not designed for young children</strong> — no kids club, no dedicated toddler pool, pool is small and serene (adult atmosphere)</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Lower review volume</strong> — recently rebranded from Trump International; review history partially reset; medium confidence signal</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>The property provides thoughtful toddler amenities on request (diaper genie, bed rails, high chair, stroller) but the experience itself is adult-focused. Recommended only if the parents' experience takes priority and toddler pool time is not central to the trip. Worth reconsidering if pool is a non-negotiable for the toddler.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-double">DOUBLE STACK</span><span style="font-weight:600; color:var(--green)">Hilton Honors LXR AND Amex FHR both apply</span></div>
+      <div class="program-row"><span class="prog-badge prog-hilton">HILTON</span><span>LXR-level recognition, Diamond upgrades meaningful here; top-tier Hilton Honors experience</span></div>
+      <div class="program-row"><span class="prog-badge prog-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout, room upgrade when available</span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$460 FHR benefits + Hilton points + Diamond recognition</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$625/night × 4)</td><td>$2,500</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$374</td></tr>
+      <tr><td>Resort fee (~$40/night × 4)</td><td>$160</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$3,034</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
+      <tr class="cost-benefit"><td>− Amex FHR property credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after FHR benefits + Hilton Honors</div></div>
+      <div style="text-align:right"><div class="amount">$2,574</div><div class="per-night">$644 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.hilton.com/en/hotels/hnllxlx-ka-lai-waikiki-beach/" target="_blank" class="link-btn link-primary">🔗 Book Direct / Hilton</a>
+    <a href="https://www.americanexpress.com/en-us/travel/fine-hotels-and-resorts" target="_blank" class="link-btn link-secondary">Amex FHR</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d1484551-Reviews-Ka_La_i_Waikiki_Beach_Lxr_Hotels_Resorts-Honolulu_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Ka+Lai+Waikiki+Beach+LXR" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+<!-- CARD 7: Ritz-Carlton Turtle Bay -->
+<div class="card" data-composite="7.0" data-effective="855" data-family="7" data-gross="3879" data-zone="waikiki" data-value="false" data-fhr="false">
+  <div class="card-header">
+    <div class="card-header-top">
+      <div class="property-name">Ritz-Carlton Oahu<br>at Turtle Bay</div>
+      <div class="composite-badge">7.0</div>
+    </div>
+    <div class="tier-row">
+      <span class="tag tag-tier">Classic Luxury Resort</span>
+      <span class="tag tag-location">North Shore · 45 min from Airport</span>
+      <span class="tag tag-budget">Luxury Tier</span>
+    </div>
+  </div>
+
+  <div class="scores-section">
+    <div class="scores-title">Dimension Scores</div>
+    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:50%"></div></div><span class="score-val low">5</span></div>
+    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val high">8</span></div>
+    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val mid">7</span></div>
+  </div>
+
+  <div class="reviews-section">
+    <div class="review-header">
+      <span class="review-confidence">4.4 / 5 · 1,200+ reviews</span>
+      <span class="confidence-badge conf-high">High Confidence</span>
+    </div>
+    <div class="theme-list">
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Dramatic coastal setting</strong> — North Shore cliffside location is genuinely stunning; very different vibe from Waikiki; wild ocean scenery praised consistently</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Ritz service standard</strong> — reliable Ritz-Carlton service delivery; staff quality consistent with brand expectations</span></div>
+      <div class="theme"><span class="theme-icon">✓</span><span><strong>Chase The Edit + Bonvoy double stack</strong> — both programs confirmed; strong benefit combination for this property</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Very remote</strong> — 45+ min from Honolulu, 1hr from airport; the remoteness is the appeal but significantly limits day-trip flexibility with a toddler</span></div>
+      <div class="theme"><span class="theme-icon">⚠</span><span><strong>Ocean not always swimmable</strong> — North Shore waves can be rough, especially in winter months; pool is the primary water option</span></div>
+    </div>
+    <div class="family-signal"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>Families praise the pools and the uncrowded feel. The North Shore remoteness works in its favor if you want a quiet, natural experience with a toddler — less overstimulation than Waikiki. The tradeoff is limited access to other activities without significant driving. Best for families who want to commit to a destination-resort style stay.</div>
+  </div>
+
+  <div class="programs-section">
+    <div class="scores-title">Programs & Benefits</div>
+    <div class="program-list">
+      <div class="program-row"><span class="prog-badge prog-double">DOUBLE STACK</span><span style="font-weight:600; color:var(--green)">Chase The Edit AND Marriott Bonvoy both confirmed</span></div>
+      <div class="program-row"><span class="prog-badge prog-chase">THE EDIT</span><span>Daily breakfast for 2, $100 experience credit, room upgrade when available, flexible check-in/checkout</span></div>
+      <div class="program-row"><span class="prog-badge prog-bonvoy">BONVOY</span><span>Points earning, Ritz-Carlton tier recognition, upgrades by Ambassador/Titanium status</span></div>
+    </div>
+    <div class="benefit-value">Estimated benefit value: ~$460 The Edit benefits + Bonvoy points + Ritz-Carlton status recognition</div>
+  </div>
+
+  <div class="cost-section">
+    <div class="scores-title">Cost View — 4 Nights</div>
+    <table class="cost-table">
+      <tr><td>Base rate (est. ~$800/night × 4)</td><td>$3,200</td></tr>
+      <tr><td>Hawaii taxes (~14.96%)</td><td>$479</td></tr>
+      <tr><td>Resort fee (~$50/night × 4)</td><td>$200</td></tr>
+      <tr class="cost-divider cost-gross"><td>GROSS TOTAL</td><td>$3,879</td></tr>
+      <tr class="cost-benefit"><td>− The Edit breakfast ($90/day × 4)</td><td>−$360</td></tr>
+      <tr class="cost-benefit"><td>− The Edit experience credit</td><td>−$100</td></tr>
+    </table>
+    <div class="cost-effective">
+      <div><div class="label">Effective Total</div><div class="per-night">after The Edit + Bonvoy</div></div>
+      <div style="text-align:right"><div class="amount">$3,419</div><div class="per-night">$855 / night effective</div></div>
+    </div>
+  </div>
+
+  <div class="links-section">
+    <a href="https://www.marriott.com/en-us/hotels/hnlrz-the-ritz-carlton-oahu-turtle-bay/overview/" target="_blank" class="link-btn link-primary">🔗 Book Direct / Bonvoy</a>
+    <a href="https://www.chase.com/travel" target="_blank" class="link-btn link-secondary">Chase The Edit</a>
+    <a href="https://www.tripadvisor.com/Hotel_Review-g60657-d23258043-Reviews-The_Ritz_Carlton_Oahu_Turtle_Bay-Kahuku_Oahu_Hawaii.html" target="_blank" class="link-btn link-review">TripAdvisor</a>
+    <a href="https://www.google.com/maps/search/Ritz+Carlton+Oahu+Turtle+Bay" target="_blank" class="link-btn link-review">Google Reviews</a>
+  </div>
+</div>
+
+</div><!-- end grid -->
+
+<!-- SUMMARY TABLE -->
+<div class="summary-section">
+  <h2>Summary Ranking</h2>
+  <table class="summary-table" id="summaryTable">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Property</th>
+        <th>Composite</th>
+        <th>Family Fit</th>
+        <th>Eff. Nightly</th>
+        <th>Gross Total</th>
+        <th>Programs</th>
+        <th>Flag</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td class="rank-num">1</td><td>Four Seasons Ko Olina</td><td>9.2</td><td>10/10</td><td>$915</td><td>$4,139</td><td>Amex FHR</td><td>🏆 Top Pick</td></tr>
+      <tr><td class="rank-num">2</td><td>Halekulani</td><td>8.1</td><td>5/10</td><td>$718</td><td>$3,334</td><td>The Edit</td><td>⚠ Low Family Fit</td></tr>
+      <tr><td class="rank-num">3</td><td>JW Marriott Ihilani</td><td>7.7</td><td>9/10</td><td>$586</td><td>$2,344</td><td>Bonvoy</td><td>⭐ Value Find</td></tr>
+      <tr><td class="rank-num">4</td><td>Royal Hawaiian</td><td>7.5</td><td>6/10</td><td>$691</td><td>$3,224</td><td>FHR + Bonvoy ★★</td><td>Double Stack</td></tr>
+      <tr><td class="rank-num">5</td><td>Ka Laʻi Waikiki (LXR)</td><td>7.4</td><td>4/10</td><td>$644</td><td>$3,034</td><td>Hilton + FHR ★★</td><td>⚠ Adults Only</td></tr>
+      <tr><td class="rank-num">6</td><td>Kahala Hotel & Resort</td><td>7.1</td><td>6/10</td><td>$546</td><td>$2,644</td><td>Amex FHR</td><td>⭐ Value Find</td></tr>
+      <tr><td class="rank-num">7</td><td>Ritz-Carlton Turtle Bay</td><td>7.0</td><td>7/10</td><td>$855</td><td>$3,879</td><td>The Edit + Bonvoy ★★</td><td>Remote Location</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="disclaimer">
+  <strong>Important notes:</strong> Rate estimates are based on late September shoulder season research and should be verified directly with properties or booking platforms for exact dates. Hawaii taxes shown at ~14.96% (GET + TAT) are approximate. Resort fees verified where possible but should be confirmed on direct booking. Program participation (Amex FHR, Chase The Edit) should be verified at time of booking as directories update. Benefit value estimates use $90–95/day for breakfast at Hawaii luxury properties (2 adults). Scores reflect available review intelligence as of May 2026 and Claude's framework assessment — they are directional, not definitive. ★★ Double stack = two programs confirmed applicable to same property.
+</div>
+
+<script>
+function sortCards() {
+  const val = document.getElementById('sortSelect').value;
+  const grid = document.getElementById('cardGrid');
+  const cards = Array.from(grid.querySelectorAll('.card'));
+  cards.sort((a, b) => {
+    if (val === 'composite') return parseFloat(b.dataset.composite) - parseFloat(a.dataset.composite);
+    if (val === 'effective') return parseFloat(a.dataset.effective) - parseFloat(b.dataset.effective);
+    if (val === 'family') return parseFloat(b.dataset.family) - parseFloat(a.dataset.family);
+    if (val === 'gross') return parseFloat(a.dataset.gross) - parseFloat(b.dataset.gross);
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function filterCards(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.card').forEach(card => {
+    card.classList.remove('hidden');
+    if (type === 'waikiki' && card.dataset.zone !== 'waikiki') card.classList.add('hidden');
+    if (type === 'ko-olina' && card.dataset.zone !== 'ko-olina') card.classList.add('hidden');
+    if (type === 'value' && card.dataset.value !== 'true') card.classList.add('hidden');
+    if (type === 'fhr' && card.dataset.fhr !== 'true') card.classList.add('hidden');
+  });
+}
+</script>
+</body>
+</html>
