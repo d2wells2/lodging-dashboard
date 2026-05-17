@@ -3,755 +3,948 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Oahu Lodging Dashboard — Sept/Oct 2026</title>
+<title>Lodging Evaluator</title>
 <style>
-  :root {
-    --bg: #f7f5f0;
-    --card: #ffffff;
-    --border: #e5e0d8;
-    --text: #1a1a1a;
-    --muted: #6b6560;
-    --accent: #1a4a3a;
-    --accent-light: #e8f0ec;
-    --gold: #b8860b;
-    --gold-light: #fdf8ed;
-    --warn: #c0392b;
-    --warn-light: #fdf0ee;
-    --green: #2e7d52;
-    --green-light: #eaf4ee;
-    --blue: #1a3a5c;
-    --blue-light: #eef2f8;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); font-family: var(--font); color: var(--text); font-size: 14px; line-height: 1.5; }
+:root{
+  --bg:#f7f5f0;--card:#ffffff;--border:#e5e0d8;--text:#1a1a1a;--muted:#6b6560;
+  --accent:#1a4a3a;--accent-light:#e8f0ec;--gold:#b8860b;--gold-light:#fdf8ed;
+  --warn:#c0392b;--warn-light:#fdf0ee;--green:#2e7d52;--green-light:#eaf4ee;
+  --blue:#1a3a5c;--blue-light:#eef2f8;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:var(--font);color:var(--text);font-size:14px;line-height:1.5;}
 
-  /* HEADER */
-  .site-header { background: var(--accent); color: white; padding: 24px 32px; }
-  .site-header h1 { font-size: 20px; font-weight: 600; }
-  .site-header .subtitle { opacity: 0.75; font-size: 13px; margin-top: 4px; }
-  .trip-meta { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-  .trip-pill { background: rgba(255,255,255,0.12); padding: 4px 11px; border-radius: 20px; font-size: 12px; }
+/* HEADER */
+.site-header{background:var(--accent);color:white;padding:20px 32px;}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
+.header-top h1{font-size:20px;font-weight:700;}
+.header-top .subtitle{opacity:.75;font-size:12px;margin-top:3px;}
+.trip-switcher{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.trip-switcher label{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:.5px;}
+.trip-switcher select{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:white;padding:5px 10px;border-radius:6px;font-size:13px;cursor:pointer;}
+.trip-switcher select option{background:#1a4a3a;color:white;}
+.trip-meta{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.trip-pill{background:rgba(255,255,255,.12);padding:4px 11px;border-radius:20px;font-size:12px;}
+.trip-pill-req{background:rgba(255,255,255,.22);font-weight:600;}
 
-  /* TOP 3 */
-  .top3-section { background: #fff; border-bottom: 1px solid var(--border); padding: 28px 32px; }
-  .top3-section h2 { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; margin-bottom: 4px; }
-  .top3-section .top3-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
-  .top3-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .top3-card { border-radius: 10px; overflow: hidden; border: 1px solid var(--border); position: relative; }
-  .top3-img { height: 140px; background-size: cover; background-position: center; position: relative; }
-  .top3-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.55)); }
-  .top3-rank { position: absolute; top: 10px; left: 10px; z-index: 2; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; }
-  .rank-1 { background: #c9a227; }
-  .rank-2 { background: #8c9aa8; }
-  .rank-3 { background: #a0735a; }
-  .top3-name { position: absolute; bottom: 10px; left: 12px; right: 12px; z-index: 2; color: white; font-size: 13px; font-weight: 600; line-height: 1.3; }
-  .top3-body { padding: 12px; }
-  .top3-why { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
-  .top3-stats { display: flex; gap: 8px; margin-bottom: 10px; }
-  .top3-stat { flex: 1; background: var(--bg); border-radius: 5px; padding: 5px 8px; text-align: center; }
-  .top3-stat .val { font-size: 14px; font-weight: 700; color: var(--accent); }
-  .top3-stat .lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
-  .top3-link { display: block; text-align: center; padding: 7px; border-radius: 6px; background: var(--accent); color: white; font-size: 12px; font-weight: 500; text-decoration: none; }
-  .top3-link:hover { background: #133a2c; }
+/* SCORING PANEL */
+.scoring-panel{background:#fff;border-bottom:1px solid var(--border);}
+.sp-toggle{padding:12px 32px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--accent);user-select:none;}
+.sp-toggle:hover{background:var(--accent-light);}
+.sp-body{padding:16px 32px 20px;border-top:1px solid var(--border);display:none;}
+.sp-body.open{display:block;}
+.sliders-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:12px;}
+.slider-row{display:flex;flex-direction:column;gap:6px;}
+.slider-row label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;}
+.wt-pct{color:var(--accent);font-weight:700;font-size:12px;}
+.slider-row input[type=range]{width:100%;accent-color:var(--accent);}
+.sp-actions{display:flex;align-items:center;gap:12px;}
+.sp-reset{padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:white;font-size:12px;cursor:pointer;color:var(--muted);}
+.sp-reset:hover{background:var(--bg);}
+.sp-note{font-size:11px;color:var(--muted);}
 
-  /* CONTROLS */
-  .controls { padding: 14px 32px; background: #f9f8f6; border-bottom: 1px solid var(--border); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .controls label { font-size: 12px; color: var(--muted); font-weight: 500; }
-  .controls select { border: 1px solid var(--border); padding: 5px 9px; border-radius: 6px; font-size: 13px; background: white; cursor: pointer; }
-  .filter-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; background: white; color: var(--text); transition: all 0.15s; }
-  .filter-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-  .sep { width: 1px; height: 18px; background: var(--border); }
+/* FILTER BAR */
+.filter-bar{padding:12px 32px;background:#f9f8f6;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.filter-bar label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.mode-group{display:flex;gap:0;}
+.mode-btn{padding:5px 12px;border:1px solid var(--border);background:white;font-size:12px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.mode-btn:first-child{border-radius:6px 0 0 6px;}
+.mode-btn:last-child{border-radius:0 6px 6px 0;}
+.mode-btn:not(:first-child){border-left:0;}
+.mode-btn.active{background:var(--accent);color:white;border-color:var(--accent);}
+.filter-select{border:1px solid var(--border);padding:5px 9px;border-radius:6px;font-size:12px;background:white;cursor:pointer;}
+.sep{width:1px;height:18px;background:var(--border);}
 
-  /* GRID */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; padding: 24px 32px; }
+/* TOP 3 */
+.top3-section{background:#fff;border-bottom:1px solid var(--border);padding:24px 32px;}
+.top3-section h2{font-size:15px;font-weight:700;margin-bottom:3px;}
+.top3-sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.top3-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.top3-img{height:140px;background-size:cover;background-position:center;position:relative;}
+.top3-img-overlay,.top3-img::after{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(0,0,0,.55));}
+.top3-rank{position:absolute;top:10px;left:10px;z-index:2;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;}
+.rank-1{background:#c9a227;} .rank-2{background:#8c9aa8;} .rank-3{background:#a0735a;}
+.top3-name{position:absolute;bottom:10px;left:12px;right:12px;z-index:2;color:white;font-size:13px;font-weight:600;line-height:1.3;}
+.top3-body{padding:12px;}
+.top3-why{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.top3-stats{display:flex;gap:8px;margin-bottom:10px;}
+.top3-stat{flex:1;background:var(--bg);border-radius:5px;padding:5px 8px;text-align:center;}
+.top3-stat .val{font-size:14px;font-weight:700;color:var(--accent);}
+.top3-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.top3-link{display:block;text-align:center;padding:7px;border-radius:6px;background:var(--accent);color:white;font-size:12px;font-weight:500;text-decoration:none;}
+.top3-link:hover{background:#133a2c;}
 
-  /* CARD */
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: box-shadow 0.2s; }
-  .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.09); }
-  .card.hidden { display: none; }
+/* GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:20px;padding:24px 32px;}
 
-  /* CARD PHOTO */
-  .card-photo { height: 180px; background-size: cover; background-position: center; position: relative; }
-  .card-photo.gradient-fs    { background: linear-gradient(135deg, #0d3b2e 0%, #1a6b55 50%, #2d9b7f 100%); }
-  .card-photo.gradient-jw    { background: linear-gradient(135deg, #0a2744 0%, #1a4a7a 50%, #2e7db5 100%); }
-  .card-photo.gradient-hal   { background: linear-gradient(135deg, #5c4208 0%, #a07820 50%, #c9a227 100%); }
-  .card-photo.gradient-royal { background: linear-gradient(135deg, #5c1a35 0%, #9b3060 50%, #c94a80 100%); }
-  .card-photo.gradient-kah   { background: linear-gradient(135deg, #1a3d2b 0%, #2e6b4f 50%, #3d9970 100%); }
-  .card-photo.gradient-lxr   { background: linear-gradient(135deg, #1a1a2e 0%, #2d2d50 50%, #4a4a7a 100%); }
-  .card-photo.gradient-rc    { background: linear-gradient(135deg, #3d2b1a 0%, #6b4a2e 50%, #9b7040 100%); }
-  .card-photo .photo-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%); }
-  .card-photo .photo-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%); font-size: 48px; opacity: 0.35; }
-  .card-photo .photo-link { position: absolute; bottom: 12px; right: 12px; background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 11px; border-radius: 5px; font-size: 11px; font-weight: 500; text-decoration: none; }
-  .card-photo .photo-link:hover { background: rgba(255,255,255,0.25); }
-  .card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* CARD */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow .2s;}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.09);}
+.card.hidden{display:none;}
 
-  /* CARD CONTENT */
-  .card-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
-  .card-header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .property-name { font-size: 15px; font-weight: 600; line-height: 1.3; }
-  .composite-badge { background: var(--accent); color: white; border-radius: 7px; padding: 4px 10px; font-size: 14px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-  .tier-row { display: flex; gap: 5px; margin-top: 7px; flex-wrap: wrap; align-items: center; }
-  .tag { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-  .tag-tier { background: var(--accent-light); color: var(--accent); }
-  .tag-location { background: var(--blue-light); color: var(--blue); }
-  .tag-budget { background: var(--gold-light); color: var(--gold); }
-  .tag-value { background: var(--green-light); color: var(--green); font-weight: 600; }
-  .tag-warn { background: var(--warn-light); color: var(--warn); }
+/* CARD PHOTO */
+.card-photo{height:180px;background-size:cover;background-position:center;position:relative;overflow:hidden;}
+.gradient-fs{background:linear-gradient(135deg,#0d3b2e,#1a6b55,#2d9b7f);}
+.gradient-jw{background:linear-gradient(135deg,#0a2744,#1a4a7a,#2e7db5);}
+.gradient-hal{background:linear-gradient(135deg,#5c4208,#a07820,#c9a227);}
+.gradient-royal{background:linear-gradient(135deg,#5c1a35,#9b3060,#c94a80);}
+.gradient-kah{background:linear-gradient(135deg,#1a3d2b,#2e6b4f,#3d9970);}
+.gradient-lxr{background:linear-gradient(135deg,#1a1a2e,#2d2d50,#4a4a7a);}
+.gradient-rc{background:linear-gradient(135deg,#3d2b1a,#6b4a2e,#9b7040);}
+.card-photo .photo-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 50%,rgba(0,0,0,.5) 100%);}
+.card-photo .photo-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:48px;opacity:.3;}
+.card-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-photo .photo-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;}
+.card-photo .photo-link-btn{position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);color:white;padding:5px 11px;border-radius:5px;font-size:11px;font-weight:500;text-decoration:none;}
+.photo-badge-row{position:absolute;top:10px;right:10px;display:flex;gap:5px;z-index:2;}
 
-  .section { padding: 13px 18px; border-bottom: 1px solid var(--border); }
-  .sec-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 9px; }
+/* BADGES */
+.badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-resort{background:#1a4a3a;color:white;}
+.badge-boutique{background:#4a1a3a;color:white;}
+.badge-villa{background:#1a3a4a;color:white;}
+.badge-rental{background:#3a3a1a;color:white;}
+.badge-ai{background:#8B0000;color:#ffd700;}
+.badge-ds{background:var(--green);color:white;}
+.badge-warn{background:var(--warn-light);color:var(--warn);border:1px solid var(--warn);font-size:10px;}
 
-  /* SCORES */
-  .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
-  .score-label { font-size: 12px; color: var(--muted); width: 130px; flex-shrink: 0; }
-  .score-bar-wrap { flex: 1; height: 5px; background: #e5e0d8; border-radius: 3px; overflow: hidden; }
-  .score-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
-  .score-val { font-size: 12px; font-weight: 600; width: 26px; text-align: right; }
-  .sv-hi { color: var(--green); }
-  .sv-md { color: var(--gold); }
-  .sv-lo { color: var(--warn); }
+/* CARD HEADER */
+.card-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.card-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.property-name{font-size:15px;font-weight:600;line-height:1.3;}
+.prop-subtitle{font-size:12px;font-weight:400;color:var(--muted);}
+.composite-badge{background:var(--accent);color:white;border-radius:7px;padding:4px 10px;font-size:15px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.tier-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.tag{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
+.tag-tier{background:var(--accent-light);color:var(--accent);}
+.tag-zone{background:var(--blue-light);color:var(--blue);}
+.tag-value{background:var(--green-light);color:var(--green);font-weight:600;}
 
-  /* REVIEWS */
-  .rev-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
-  .rev-confidence { font-size: 12px; color: var(--muted); }
-  .conf-badge { padding: 2px 7px; border-radius: 3px; font-size: 11px; font-weight: 600; }
-  .conf-hi { background: var(--green-light); color: var(--green); }
-  .conf-md { background: var(--gold-light); color: var(--gold); }
-  .theme { display: flex; gap: 5px; font-size: 12px; margin-bottom: 4px; align-items: flex-start; }
-  .family-box { margin-top: 8px; padding: 8px 10px; background: #f0f5ff; border-radius: 6px; font-size: 12px; color: var(--blue); }
-  .family-box strong { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 2px; }
+/* SECTION */
+.section{padding:13px 18px;border-bottom:1px solid var(--border);}
+.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:9px;}
 
-  /* PROGRAMS */
-  .prog-row { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; margin-bottom: 5px; }
-  .prog-badge { padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
-  .pb-fhr    { background: #1a1a2e; color: #d4af37; }
-  .pb-chase  { background: #003087; color: white; }
-  .pb-hyatt  { background: #6b2d8b; color: white; }
-  .pb-bonvoy { background: #002855; color: #c8a84b; }
-  .pb-hilton { background: #00338d; color: #cda323; }
-  .pb-double { background: #2e7d52; color: white; }
-  .benefit-val { margin-top: 5px; padding: 5px 9px; background: var(--green-light); border-radius: 5px; font-size: 12px; color: var(--green); font-weight: 600; }
+/* ROOM SELECTOR */
+.room-select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:white;cursor:pointer;color:var(--text);}
+.room-note{font-size:11px;color:var(--muted);margin-top:5px;}
 
-  /* COST */
-  .cost-table { width: 100%; font-size: 12px; }
-  .cost-table td { padding: 2px 0; }
-  .cost-table td:last-child { text-align: right; color: var(--muted); }
-  .ct-div td { border-top: 1px solid var(--border); padding-top: 5px !important; }
-  .ct-gross td { font-weight: 600; color: var(--text); }
-  .ct-gross td:last-child { color: var(--text); }
-  .ct-ben td { color: var(--green); }
-  .cost-eff { margin-top: 8px; background: var(--accent-light); border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center; }
-  .ce-label { font-size: 12px; font-weight: 600; color: var(--accent); }
-  .ce-sub { font-size: 10px; color: var(--accent); opacity: 0.7; }
-  .ce-amt { font-size: 16px; font-weight: 700; color: var(--accent); }
-  .ce-night { font-size: 11px; color: var(--accent); opacity: 0.7; text-align: right; }
+/* SCORES */
+.score-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.score-label{font-size:12px;color:var(--muted);width:140px;flex-shrink:0;}
+.score-bar-wrap{flex:1;height:5px;background:#e5e0d8;border-radius:3px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:3px;background:var(--accent);}
+.score-val{font-size:12px;font-weight:600;width:26px;text-align:right;}
+.sv-hi{color:var(--green);} .sv-md{color:var(--gold);} .sv-lo{color:var(--warn);}
 
-  /* LINKS */
-  .links-section { padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 7px; }
-  .lbtn { padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none; border: 1px solid; display: inline-flex; align-items: center; gap: 4px; }
-  .lb-primary { background: var(--accent); color: white; border-color: var(--accent); }
-  .lb-primary:hover { background: #133a2c; }
-  .lb-sec { background: white; color: var(--text); border-color: var(--border); }
-  .lb-sec:hover { background: var(--bg); }
-  .lb-rev { background: white; color: var(--blue); border-color: var(--blue-light); }
+/* AMENITIES */
+.amenities-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.amenity-item{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:6px;background:var(--bg);font-size:12px;}
+.amenity-item.lacks{opacity:.35;text-decoration:line-through;}
+.amenity-item.missing-nn{background:var(--warn-light);color:var(--warn);opacity:1;text-decoration:none;font-weight:600;}
+.amenity-icon{font-size:14px;flex-shrink:0;}
 
-  /* SUMMARY */
-  .summary-section { padding: 24px 32px 0; }
-  .summary-section h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
-  .sum-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); font-size: 13px; }
-  .sum-table th { background: var(--accent); color: white; padding: 9px 13px; text-align: left; font-weight: 500; font-size: 11px; }
-  .sum-table td { padding: 9px 13px; border-bottom: 1px solid var(--border); }
-  .sum-table tr:last-child td { border-bottom: none; }
-  .sum-table tr:hover td { background: var(--bg); }
-  .rn { font-weight: 700; color: var(--accent); }
+/* REVIEWS */
+.theme{display:flex;gap:6px;font-size:12px;margin-bottom:5px;align-items:flex-start;line-height:1.4;}
+.family-box{margin-top:9px;padding:8px 10px;background:#f0f5ff;border-radius:6px;font-size:12px;color:var(--blue);}
+.family-box strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
 
-  .disclaimer { padding: 16px 32px 28px; font-size: 11px; color: var(--muted); line-height: 1.6; }
+/* PROGRAMS */
+.prog-row{display:flex;gap:7px;align-items:flex-start;font-size:12px;margin-bottom:5px;}
+.prog-badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.pb-fhr{background:#1a1a2e;color:#d4af37;}
+.pb-chase{background:#003087;color:white;}
+.pb-hyatt{background:#6b2d8b;color:white;}
+.pb-bonvoy{background:#002855;color:#c8a84b;}
+.pb-hilton{background:#00338d;color:#cda323;}
+.pb-double{background:var(--green);color:white;}
+.benefit-val{margin-top:7px;padding:6px 10px;background:var(--green-light);border-radius:5px;font-size:12px;color:var(--green);font-weight:500;}
 
-  @media(max-width:700px){
-    .grid { grid-template-columns:1fr; padding:12px; }
-    .top3-grid { grid-template-columns:1fr; }
-    .site-header,.controls,.summary-section,.disclaimer,.top3-section { padding-left:16px; padding-right:16px; }
-  }
+/* COST */
+.cost-table{width:100%;font-size:12px;border-collapse:collapse;}
+.cost-table td{padding:3px 0;}
+.cost-table td:last-child{text-align:right;color:var(--muted);}
+.ct-div td{border-top:1px solid var(--border);padding-top:6px !important;margin-top:2px;}
+.ct-gross td{font-weight:700;color:var(--text);}
+.ct-gross td:last-child{color:var(--text);}
+.ct-ben td{color:var(--green);}
+.cost-eff{margin-top:10px;background:var(--accent-light);border-radius:7px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;}
+.ce-label{font-size:13px;font-weight:700;color:var(--accent);}
+.ce-sub{font-size:10px;color:var(--accent);opacity:.7;margin-top:1px;}
+.ce-amt{font-size:17px;font-weight:800;color:var(--accent);}
+.ce-night{font-size:11px;color:var(--accent);opacity:.7;text-align:right;}
+
+/* LINKS */
+.links-section{padding:12px 18px;display:flex;flex-wrap:wrap;gap:7px;}
+.lbtn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid;display:inline-flex;align-items:center;gap:4px;}
+.lb-primary{background:var(--accent);color:white;border-color:var(--accent);}
+.lb-primary:hover{background:#133a2c;}
+.lb-sec{background:white;color:var(--text);border-color:var(--border);}
+.lb-sec:hover{background:var(--bg);}
+.lb-rev{background:white;color:var(--blue);border-color:var(--blue-light);}
+
+/* SUMMARY */
+.summary-section{padding:24px 32px 0;}
+.summary-section h2{font-size:15px;font-weight:600;margin-bottom:14px;}
+.sum-table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;}
+.sum-table th{background:var(--accent);color:white;padding:9px 13px;text-align:left;font-weight:500;font-size:11px;}
+.sum-table td{padding:9px 13px;border-bottom:1px solid var(--border);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table tr:hover td{background:var(--bg);}
+.rn{font-weight:700;color:var(--accent);}
+
+.disclaimer{padding:16px 32px 32px;font-size:11px;color:var(--muted);line-height:1.7;}
+
+@media(max-width:700px){
+  .cards-grid{grid-template-columns:1fr;padding:12px;}
+  .top3-grid{grid-template-columns:1fr;}
+  .site-header,.filter-bar,.scoring-panel,.summary-section,.disclaimer,.top3-section{padding-left:16px;padding-right:16px;}
+  .sliders-grid{grid-template-columns:repeat(2,1fr);}
+  .amenities-grid{grid-template-columns:repeat(3,1fr);}
+}
 </style>
 </head>
 <body>
-
-<!-- SITE HEADER -->
-<div class="site-header">
-  <h1>🌺 Oahu Lodging Shortlist</h1>
-  <div class="subtitle">Personalized evaluation — criteria-driven, loyalty-aware, cost-transparent</div>
-  <div class="trip-meta">
-    <span class="trip-pill">📍 Oahu, Hawaii</span>
-    <span class="trip-pill">📅 Late Sept – Early Oct 2026</span>
-    <span class="trip-pill">🌙 4 nights</span>
-    <span class="trip-pill">👨‍👩‍👧 2 adults + 1 toddler</span>
-    <span class="trip-pill">🏊 Pool required</span>
-    <span class="trip-pill">💳 Amex FHR · Chase The Edit · Bonvoy · Hyatt · Hilton</span>
-  </div>
-</div>
-
-<!-- TOP 3 RECOMMENDATIONS -->
-<div class="top3-section">
-  <h2>⭐ Top 3 Recommendations</h2>
-  <div class="top3-sub">Curated for your profile: quality-elastic traveler, toddler in tow, multi-program holder. Not just ranked by score — ranked by fit.</div>
-  <div class="top3-grid">
-
-    <div class="top3-card">
-      <div class="top3-img" style="background-image:url('https://www.fourseasons.com/alt/img-opt/~70.1530.0,0000-1016,4409-2000,0000-1125,0000/publish/content/dam/fourseasons/images/web/OAH/OAH_2469_original.jpg'); background-size:cover; background-position:center;">
-        <div class="top3-rank rank-1">1</div>
-        <div class="top3-name">Four Seasons Ko Olina</div>
-      </div>
-      <div class="top3-body">
-        <div class="top3-why">The benchmark everything else is measured against. No compromises — pool, service, and toddler infrastructure are all best-in-class. The Keiki Pool and private lagoon are purpose-built for exactly this trip.</div>
-        <div class="top3-stats">
-          <div class="top3-stat"><div class="val">9.2</div><div class="lbl">Composite</div></div>
-          <div class="top3-stat"><div class="val">10/10</div><div class="lbl">Family Fit</div></div>
-          <div class="top3-stat"><div class="val">$915</div><div class="lbl">Eff/Night</div></div>
-        </div>
-        <a href="#card-fs" class="top3-link" onclick="document.getElementById('card-fs').scrollIntoView({behavior:'smooth'}); return false;">View Full Details ↓</a>
-      </div>
-    </div>
-
-    <div class="top3-card">
-      <div class="top3-img gradient-jw">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.55))"></div>
-        <div class="top3-rank rank-2">2</div>
-        <div class="top3-name">JW Marriott Ihilani Ko Olina</div>
-        <a href="https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/photos/" target="_blank" class="photo-link" style="position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);color:white;padding:4px 9px;border-radius:4px;font-size:10px;text-decoration:none;">📸 View Photos</a>
-      </div>
-      <div class="top3-body">
-        <div class="top3-why">Best value story on the list. The zero-entry pool is arguably better for a toddler than most Waikiki options — and at 37% less effective cost than Four Seasons. Strong family fit without the flagship price.</div>
-        <div class="top3-stats">
-          <div class="top3-stat"><div class="val">7.7</div><div class="lbl">Composite</div></div>
-          <div class="top3-stat"><div class="val">9/10</div><div class="lbl">Family Fit</div></div>
-          <div class="top3-stat"><div class="val">$586</div><div class="lbl">Eff/Night</div></div>
-        </div>
-        <a href="#card-jw" class="top3-link" onclick="document.getElementById('card-jw').scrollIntoView({behavior:'smooth'}); return false;">View Full Details ↓</a>
-      </div>
-    </div>
-
-    <div class="top3-card">
-      <div class="top3-img gradient-royal">
-        <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1),rgba(0,0,0,0.55))"></div>
-        <div class="top3-rank rank-3">3</div>
-        <div class="top3-name">The Royal Hawaiian, Waikiki</div>
-        <a href="https://www.royal-hawaiian.com/photo-tour/" target="_blank" class="photo-link" style="position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,0.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.3);color:white;padding:4px 9px;border-radius:4px;font-size:10px;text-decoration:none;">📸 View Photos</a>
-      </div>
-      <div class="top3-body">
-        <div class="top3-why">Best pick if Waikiki energy is part of the trip vision. Historic beachfront location, the strongest double-program stack on the list (FHR + Bonvoy), and a genuinely iconic Hawaiian experience.</div>
-        <div class="top3-stats">
-          <div class="top3-stat"><div class="val">7.5</div><div class="lbl">Composite</div></div>
-          <div class="top3-stat"><div class="val">6/10</div><div class="lbl">Family Fit</div></div>
-          <div class="top3-stat"><div class="val">$691</div><div class="lbl">Eff/Night</div></div>
-        </div>
-        <a href="#card-royal" class="top3-link" onclick="document.getElementById('card-royal').scrollIntoView({behavior:'smooth'}); return false;">View Full Details ↓</a>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- CONTROLS -->
-<div class="controls">
-  <label>Sort by:</label>
-  <select id="sortSelect" onchange="sortCards()">
-    <option value="composite">Composite Score</option>
-    <option value="effective">Effective Nightly Rate</option>
-    <option value="family">Family Fit Score</option>
-    <option value="gross">Gross Total (lowest first)</option>
-  </select>
-  <div class="sep"></div>
-  <label>Filter:</label>
-  <button class="filter-btn active" onclick="filterCards('all',this)">All (7)</button>
-  <button class="filter-btn" onclick="filterCards('ko-olina',this)">Ko Olina</button>
-  <button class="filter-btn" onclick="filterCards('waikiki',this)">Waikiki</button>
-  <button class="filter-btn" onclick="filterCards('value',this)">⭐ Value Finds</button>
-  <button class="filter-btn" onclick="filterCards('fhr',this)">Amex FHR</button>
-  <button class="filter-btn" onclick="filterCards('top3',this)">Top 3 Only</button>
-</div>
-
-<!-- PROPERTY CARDS -->
-<div class="grid" id="cardGrid">
-
-<!-- ① FOUR SEASONS KO OLINA -->
-<div class="card" id="card-fs" data-composite="9.2" data-effective="915" data-family="10" data-gross="4139" data-zone="ko-olina" data-value="false" data-fhr="true" data-top3="true">
-  <div class="card-photo">
-    <img src="https://www.fourseasons.com/alt/img-opt/~70.1530.0,0000-1016,4409-2000,0000-1125,0000/publish/content/dam/fourseasons/images/web/OAH/OAH_2469_original.jpg"
-         alt="Four Seasons Ko Olina pool"
-         onerror="this.parentElement.classList.add('gradient-fs'); this.remove(); this.parentElement.innerHTML += '<div class=\'photo-icon\'>🌊</div>';">
-    <div class="photo-overlay"></div>
-    <a href="https://www.fourseasons.com/oahu/photos-and-videos/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">Four Seasons Resort Oahu at Ko Olina</div>
-      <div class="composite-badge">9.2</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Classic Luxury Resort</span>
-      <span class="tag tag-location">Ko Olina · West Side</span>
-      <span class="tag tag-budget">Luxury Tier</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:100%"></div></div><span class="score-val sv-hi">10</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:100%"></div></div><span class="score-val sv-hi">10</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.8 / 5 · 800+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Pool & lagoon</strong> — Keiki Pool + private swimmable lagoon with calm shallow water; universally praised for toddler safety</span></div>
-    <div class="theme"><span>✓</span><span><strong>Proactive service</strong> — anticipatory staff culture; #1 theme in recent reviews by a wide margin</span></div>
-    <div class="theme"><span>✓</span><span><strong>Family infrastructure</strong> — free Kids Club, cribs pre-set, beach gear, sunscreen at pools</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Remote from Waikiki</strong> — Ko Olina is 30–40 min west; car needed for exploring</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Price premium</strong> — even luxury-accustomed guests note the cost; benefits offset meaningfully</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Reviewers cite Keiki Pool and shallow lagoon as standouts. Cribs, rails, high chairs arrive pre-set. Unanimously family-recommended among Oahu luxury options.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout, noon early check-in when available, room upgrade</span></div>
-    <div class="benefit-val">Estimated benefit value: ~$480 · ($380 breakfast + $100 credit)</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$900/night × 4)</td><td>$3,600</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$539</td></tr>
-      <tr><td>Resort fee</td><td>$0</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$4,139</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR breakfast ($95/day × 4)</td><td>−$380</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR property credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after FHR benefits</div></div><div style="text-align:right"><div class="ce-amt">$3,659</div><div class="ce-night">$915/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.fourseasons.com/oahu/" target="_blank" class="lbtn lb-primary">🔗 Book Direct</a>
-    <a href="https://www.americanexpress.com/en-us/travel/fine-hotels-and-resorts" target="_blank" class="lbtn lb-sec">Amex FHR</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60654-d8684459-Reviews-Four_Seasons_Resort_Oahu_At_Ko_Olina-Kapolei_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Four+Seasons+Resort+Oahu+Ko+Olina" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ② JW MARRIOTT IHILANI -->
-<div class="card" id="card-jw" data-composite="7.7" data-effective="586" data-family="9" data-gross="2344" data-zone="ko-olina" data-value="true" data-fhr="false" data-top3="true">
-  <div class="card-photo gradient-jw">
-    <div class="photo-icon">🏊</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/photos/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">JW Marriott Ihilani Resort & Spa at Ko Olina</div>
-      <div class="composite-badge">7.7</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Classic Luxury Resort</span>
-      <span class="tag tag-location">Ko Olina · West Side</span>
-      <span class="tag tag-budget">Premium Tier</span>
-      <span class="tag tag-value">⭐ Value Find</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-hi">7</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.4 / 5 · 3,500+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Zero-entry pool</strong> — 3,200 sq ft pool with zero-entry design; best toddler-safe pool setup in Ko Olina</span></div>
-    <div class="theme"><span>✓</span><span><strong>Calm lagoon access</strong> — Ko Olina lagoon sheltered and swimmable; ideal for toddlers</span></div>
-    <div class="theme"><span>✓</span><span><strong>Space & value</strong> — spacious rooms, extensive grounds; consistently noted as best value in Ko Olina</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Design feeling dated</strong> — less contemporary than Four Seasons next door per recent reviews</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Car essential</strong> — same Ko Olina distance caveat; nothing walkable beyond the complex</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Zero-entry pool design is genuinely safer — gradual water entry flagged specifically by parents. Licensed kids program on-site. Crib requests fulfilled reliably.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-bonvoy">BONVOY</span><span>Points earning, room upgrades by status, Titanium/Ambassador 4pm late checkout</span></div>
-    <div class="benefit-val" style="background:#eef2ff;color:#002855;">No FHR/Edit breakfast benefit — points & status value only. Verify Bonvoy tier for upgrades.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$475/night × 4)</td><td>$1,900</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$284</td></tr>
-      <tr><td>Resort fee (~$40/night × 4)</td><td>$160</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$2,344</td></tr>
-      <tr><td colspan="2" style="color:var(--muted);font-style:italic;font-size:11px;padding-top:4px;">No card breakfast credit applicable</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">Bonvoy points only</div></div><div style="text-align:right"><div class="ce-amt">$2,344</div><div class="ce-night">$586/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/overview/" target="_blank" class="lbtn lb-primary">🔗 Book / Bonvoy</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60654-d114082-Reviews-JW_Marriott_Ihilani_Resort_Spa_At_Ko_Olina-Kapolei_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/JW+Marriott+Ihilani+Ko+Olina" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ③ HALEKULANI -->
-<div class="card" id="card-hal" data-composite="8.1" data-effective="718" data-family="5" data-gross="3334" data-zone="waikiki" data-value="false" data-fhr="false" data-top3="false">
-  <div class="card-photo gradient-hal">
-    <div class="photo-icon">🌸</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.halekulani.com/facilities/pool/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">Halekulani Hotel</div>
-      <div class="composite-badge">8.1</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Upscale Independent</span>
-      <span class="tag tag-location">Waikiki Beachfront</span>
-      <span class="tag tag-budget">Luxury Tier</span>
-      <span class="tag tag-warn">⚠ Lower Family Fit</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:50%"></div></div><span class="score-val sv-lo">5</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.7 / 5 · 2,000+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Iconic orchid pool</strong> — 1.2M glass tile mosaic; one of the most beautiful hotel pools in Hawaii; rarely crowded</span></div>
-    <div class="theme"><span>✓</span><span><strong>Service excellence</strong> — staff recall guest names and preferences; among best service scores on Oahu</span></div>
-    <div class="theme"><span>✓</span><span><strong>No resort fee</strong> — confirmed; includes morning yoga, beach access, personal concierge</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Quiet / adults-oriented</strong> — serene atmosphere not designed for young families; no dedicated kids area</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Limited toddler infrastructure</strong> — single pool, no shallow area, no kids club</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Manageable but not purpose-built. Best if parents' experience takes priority and pool time is supplemental rather than central to the day.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-chase">THE EDIT</span><span>Daily breakfast for 2, $100 experience credit, room upgrade, early check-in/late checkout — <em>verify current Edit participation before booking</em></span></div>
-    <div class="benefit-val">Estimated benefit value: ~$460 (subject to Edit program verification)</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$725/night × 4)</td><td>$2,900</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$434</td></tr>
-      <tr><td>Resort fee</td><td>$0 confirmed</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$3,334</td></tr>
-      <tr class="ct-ben"><td>− The Edit breakfast ($90/day × 4)</td><td>−$360</td></tr>
-      <tr class="ct-ben"><td>− The Edit property credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after Edit benefits (verify)</div></div><div style="text-align:right"><div class="ce-amt">$2,874</div><div class="ce-night">$718/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.halekulani.com/" target="_blank" class="lbtn lb-primary">🔗 Book Direct</a>
-    <a href="https://www.chase.com/travel" target="_blank" class="lbtn lb-sec">Chase The Edit</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d90015-Reviews-Halekulani_Hotel-Honolulu_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Halekulani+Hotel+Waikiki" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ④ ROYAL HAWAIIAN -->
-<div class="card" id="card-royal" data-composite="7.5" data-effective="691" data-family="6" data-gross="3224" data-zone="waikiki" data-value="false" data-fhr="true" data-top3="true">
-  <div class="card-photo gradient-royal">
-    <div class="photo-icon">🌸</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.royal-hawaiian.com/photo-tour/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">The Royal Hawaiian<br><span style="font-size:12px;font-weight:400;color:var(--muted)">Luxury Collection Resort, Waikiki</span></div>
-      <div class="composite-badge">7.5</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Classic Luxury Resort</span>
-      <span class="tag tag-location">Waikiki Beachfront</span>
-      <span class="tag tag-budget">Premium–Luxury</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val sv-md">6</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.3 / 5 · 4,000+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Historic character & location</strong> — the Pink Palace; prime Waikiki beachfront position, architecturally iconic</span></div>
-    <div class="theme"><span>✓</span><span><strong>Sheraton pool access</strong> — Helumoa Playground shared with Sheraton: two waterslides, fountain area for kids</span></div>
-    <div class="theme"><span>✓</span><span><strong>Double program stack</strong> — Amex FHR AND Marriott Bonvoy; strongest combined benefit story on the list</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Own pool small & crowded</strong> — main pool frequently flagged; shared Sheraton pool large but can be cold and chaotic</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Service variability</strong> — recent reviews note inconsistency; not at Four Seasons standard</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Sheraton waterslides work for older kids; beach access excellent. Pool situation limits toddler-specific pool time. Best if Waikiki walkability and the historic experience matter more than resort pool infrastructure.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-double">DOUBLE STACK</span><span style="font-weight:600;color:var(--green)">Amex FHR AND Marriott Bonvoy confirmed</span></div>
-    <div class="prog-row"><span class="prog-badge pb-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 credit, 4pm checkout, room upgrade</span></div>
-    <div class="prog-row"><span class="prog-badge pb-bonvoy">BONVOY</span><span>Points earning + Luxury Collection elite recognition; $20/person Continental credit for elites</span></div>
-    <div class="benefit-val">Estimated benefit value: ~$460 FHR benefits + Bonvoy points (variable by status)</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$675/night × 4)</td><td>$2,700</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$404</td></tr>
-      <tr><td>Resort fee (~$30/night × 4)</td><td>$120</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$3,224</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR property credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after FHR + Bonvoy points</div></div><div style="text-align:right"><div class="ce-amt">$2,764</div><div class="ce-night">$691/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.marriott.com/en-us/hotels/hnllc-the-royal-hawaiian-a-luxury-collection-resort-waikiki/overview/" target="_blank" class="lbtn lb-primary">🔗 Book / Bonvoy</a>
-    <a href="https://www.americanexpress.com/en-us/travel/fine-hotels-and-resorts" target="_blank" class="lbtn lb-sec">Amex FHR</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d114024-Reviews-The_Royal_Hawaiian_a_Luxury_Collection_Resort_Waikiki-Honolulu_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Royal+Hawaiian+Hotel+Waikiki" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ⑤ KAHALA -->
-<div class="card" id="card-kah" data-composite="7.1" data-effective="546" data-family="6" data-gross="2644" data-zone="waikiki" data-value="true" data-fhr="true" data-top3="false">
-  <div class="card-photo gradient-kah">
-    <div class="photo-icon">🐬</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.kahalaresort.com/luxury-hotel/hi-res-image-gallery/kahala-resort/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">The Kahala Hotel & Resort</div>
-      <div class="composite-badge">7.1</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Upscale Independent</span>
-      <span class="tag tag-location">Kahala · 17 min from Waikiki</span>
-      <span class="tag tag-budget">Premium Tier</span>
-      <span class="tag tag-value">⭐ Value Find</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val sv-md">6</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:60%"></div></div><span class="score-val sv-md">6</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.4 / 5 · 2,800+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Secluded luxury</strong> — removed from Waikiki; genuinely peaceful and unhurried atmosphere</span></div>
-    <div class="theme"><span>✓</span><span><strong>Dolphin Quest lagoon</strong> — 26,000 sq ft dolphin habitat; memorable for families</span></div>
-    <div class="theme"><span>✓</span><span><strong>No resort fee</strong> — confirmed; includes lei greeting and resort shuttle to Waikiki</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Pool condition concerns</strong> — recent reviews flag aging infrastructure: crumbling edges, tile needing work</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Car required</strong> — secluded location; adds logistics cost and complexity with a toddler</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Dolphin lagoon is a highlight but the pool infrastructure concerns are worth monitoring closely. Best if the secluded vibe matters more than pool-centric days.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout — note: upgrades limited to one category at Kahala</span></div>
-    <div class="benefit-val">Estimated benefit value: ~$460 · ($360 breakfast + $100 credit)</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$575/night × 4)</td><td>$2,300</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$344</td></tr>
-      <tr><td>Resort fee</td><td>$0 confirmed</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$2,644</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR property credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after FHR benefits</div></div><div style="text-align:right"><div class="ce-amt">$2,184</div><div class="ce-night">$546/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.kahalaresort.com/" target="_blank" class="lbtn lb-primary">🔗 Book Direct</a>
-    <a href="https://www.americanexpress.com/en-us/travel/discover/property/Hawaii-US/Honolulu/the-kahala-hotel--resort" target="_blank" class="lbtn lb-sec">Amex FHR</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d114008-Reviews-The_Kahala_Hotel_Resort-Honolulu_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Kahala+Hotel+Resort+Honolulu" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ⑥ KA LA'I LXR -->
-<div class="card" id="card-lxr" data-composite="7.4" data-effective="644" data-family="4" data-gross="3034" data-zone="waikiki" data-value="false" data-fhr="true" data-top3="false">
-  <div class="card-photo gradient-lxr">
-    <div class="photo-icon">🌃</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.hilton.com/en/hotels/hnlwiol-ka-lai-waikiki-beach/resort/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">Ka Laʻi Waikiki Beach<br><span style="font-size:12px;font-weight:400;color:var(--muted)">LXR Hotels & Resorts · Hilton</span></div>
-      <div class="composite-badge">7.4</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Lifestyle Brand</span>
-      <span class="tag tag-location">Waikiki</span>
-      <span class="tag tag-budget">Premium–Luxury</span>
-      <span class="tag tag-warn">⚠ Adults-Leaning</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:90%"></div></div><span class="score-val sv-hi">9</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:40%"></div></div><span class="score-val sv-lo">4</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.5 / 5 · 300+ reviews</span><span class="conf-badge conf-md">Medium Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Exceptional service</strong> — Diamond Hilton Honors guests report best-in-class recognition; staff go beyond standard</span></div>
-    <div class="theme"><span>✓</span><span><strong>Chic boutique design</strong> — recently renovated; strong design identity, different from standard Waikiki</span></div>
-    <div class="theme"><span>✓</span><span><strong>Double program stack</strong> — Hilton Honors LXR AND Amex FHR both confirmed; strong combined benefit</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Not designed for young children</strong> — no kids club, no toddler pool, serene adult atmosphere</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Lower review volume</strong> — recently rebranded; medium confidence signal only</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Thoughtful on-request toddler amenities (bed rails, high chair, stroller) but the experience is adult-focused. Only recommended if parents' experience takes clear priority.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-double">DOUBLE STACK</span><span style="font-weight:600;color:var(--green)">Hilton Honors LXR AND Amex FHR both apply</span></div>
-    <div class="prog-row"><span class="prog-badge pb-hilton">HILTON</span><span>LXR Diamond recognition; top-tier Honors experience</span></div>
-    <div class="prog-row"><span class="prog-badge pb-fhr">AMEX FHR</span><span>Daily breakfast for 2, $100 property credit, 4pm checkout, upgrade</span></div>
-    <div class="benefit-val">Estimated benefit value: ~$460 FHR + Hilton points + Diamond recognition</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$625/night × 4)</td><td>$2,500</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$374</td></tr>
-      <tr><td>Resort fee (~$40/night × 4)</td><td>$160</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$3,034</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR breakfast ($90/day × 4)</td><td>−$360</td></tr>
-      <tr class="ct-ben"><td>− Amex FHR property credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after FHR + Hilton Honors</div></div><div style="text-align:right"><div class="ce-amt">$2,574</div><div class="ce-night">$644/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.hilton.com/en/hotels/hnlwiol-ka-lai-waikiki-beach/" target="_blank" class="lbtn lb-primary">🔗 Book / Hilton</a>
-    <a href="https://www.americanexpress.com/en-us/travel/fine-hotels-and-resorts" target="_blank" class="lbtn lb-sec">Amex FHR</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60982-d1484551-Reviews-Ka_La_i_Waikiki_Beach_Lxr_Hotels_Resorts-Honolulu_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Ka+Lai+Waikiki+Beach+LXR" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-<!-- ⑦ RITZ-CARLTON TURTLE BAY -->
-<div class="card" id="card-rc" data-composite="7.0" data-effective="855" data-family="7" data-gross="3879" data-zone="waikiki" data-value="false" data-fhr="false" data-top3="false">
-  <div class="card-photo gradient-rc">
-    <div class="photo-icon">🌊</div>
-    <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0),rgba(0,0,0,0.3))"></div>
-    <a href="https://www.marriott.com/en-us/hotels/hnlrz-the-ritz-carlton-oahu-turtle-bay/photos/" target="_blank" class="photo-link">📸 View Photos</a>
-  </div>
-  <div class="card-header">
-    <div class="card-header-top">
-      <div class="property-name">Ritz-Carlton Oʻahu, Turtle Bay</div>
-      <div class="composite-badge">7.0</div>
-    </div>
-    <div class="tier-row">
-      <span class="tag tag-tier">Classic Luxury Resort</span>
-      <span class="tag tag-location">North Shore · 45 min from Airport</span>
-      <span class="tag tag-budget">Luxury Tier</span>
-    </div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Dimension Scores</div>
-    <div class="score-row"><span class="score-label">Location & Access</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:50%"></div></div><span class="score-val sv-lo">5</span></div>
-    <div class="score-row"><span class="score-label">Design & Experience</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Service</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:80%"></div></div><span class="score-val sv-hi">8</span></div>
-    <div class="score-row"><span class="score-label">Family / Toddler Fit</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-    <div class="score-row"><span class="score-label">Review Confidence</span><div class="score-bar-wrap"><div class="score-bar-fill" style="width:70%"></div></div><span class="score-val sv-md">7</span></div>
-  </div>
-  <div class="section">
-    <div class="rev-header"><span class="rev-confidence">4.4 / 5 · 1,200+ reviews</span><span class="conf-badge conf-hi">High Confidence</span></div>
-    <div class="theme"><span>✓</span><span><strong>Dramatic North Shore setting</strong> — cliffside coastal location unlike anything in Waikiki; wild and scenic</span></div>
-    <div class="theme"><span>✓</span><span><strong>Ritz service standard</strong> — reliable brand delivery; consistent staff quality</span></div>
-    <div class="theme"><span>✓</span><span><strong>Double program stack</strong> — Chase The Edit AND Marriott Bonvoy both confirmed</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Very remote</strong> — 45+ min from Honolulu; limits day-trip flexibility significantly with a toddler</span></div>
-    <div class="theme"><span>⚠</span><span><strong>Ocean can be rough</strong> — North Shore waves not always swimmable; pool is primary water option</span></div>
-    <div class="family-box"><strong>👨‍👩‍👧 Toddler Signal</strong>Uncrowded, peaceful feel works well with toddlers. Remote location trades activity flexibility for natural serenity. Best for families committed to a destination-resort style stay with no day-tripping.</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Programs & Benefits</div>
-    <div class="prog-row"><span class="prog-badge pb-double">DOUBLE STACK</span><span style="font-weight:600;color:var(--green)">Chase The Edit AND Marriott Bonvoy confirmed</span></div>
-    <div class="prog-row"><span class="prog-badge pb-chase">THE EDIT</span><span>Daily breakfast for 2, $100 experience credit, room upgrade, flexible check-in/checkout</span></div>
-    <div class="prog-row"><span class="prog-badge pb-bonvoy">BONVOY</span><span>Points earning, Ritz-Carlton tier recognition, Ambassador/Titanium upgrades</span></div>
-    <div class="benefit-val">Estimated benefit value: ~$460 The Edit benefits + Bonvoy points</div>
-  </div>
-  <div class="section">
-    <div class="sec-title">Cost View — 4 Nights</div>
-    <table class="cost-table">
-      <tr><td>Base rate (~$800/night × 4)</td><td>$3,200</td></tr>
-      <tr><td>Hawaii taxes (~14.96%)</td><td>$479</td></tr>
-      <tr><td>Resort fee (~$50/night × 4)</td><td>$200</td></tr>
-      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$3,879</td></tr>
-      <tr class="ct-ben"><td>− The Edit breakfast ($90/day × 4)</td><td>−$360</td></tr>
-      <tr class="ct-ben"><td>− The Edit experience credit</td><td>−$100</td></tr>
-    </table>
-    <div class="cost-eff"><div><div class="ce-label">Effective Total</div><div class="ce-sub">after The Edit + Bonvoy</div></div><div style="text-align:right"><div class="ce-amt">$3,419</div><div class="ce-night">$855/night effective</div></div></div>
-  </div>
-  <div class="links-section">
-    <a href="https://www.marriott.com/en-us/hotels/hnlrz-the-ritz-carlton-oahu-turtle-bay/overview/" target="_blank" class="lbtn lb-primary">🔗 Book / Bonvoy</a>
-    <a href="https://www.chase.com/travel" target="_blank" class="lbtn lb-sec">Chase The Edit</a>
-    <a href="https://www.tripadvisor.com/Hotel_Review-g60651-d87158-Reviews-The_Ritz_Carlton_O_ahu_Turtle_Bay-Kahuku_Oahu_Hawaii.html" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
-    <a href="https://www.google.com/maps/search/Ritz+Carlton+Oahu+Turtle+Bay" target="_blank" class="lbtn lb-rev">Google Reviews</a>
-  </div>
-</div>
-
-</div><!-- end grid -->
-
-<!-- SUMMARY TABLE -->
-<div class="summary-section">
-  <h2>Summary Ranking</h2>
-  <table class="sum-table">
-    <thead><tr><th>Rank</th><th>Property</th><th>Composite</th><th>Family Fit</th><th>Eff. Nightly</th><th>Gross (4 nights)</th><th>Programs</th><th>Flag</th></tr></thead>
-    <tbody>
-      <tr><td class="rn">1</td><td>Four Seasons Ko Olina</td><td>9.2</td><td>10/10</td><td>$915</td><td>$4,139</td><td>Amex FHR</td><td>🏆 Top Pick</td></tr>
-      <tr><td class="rn">2</td><td>Halekulani</td><td>8.1</td><td>5/10</td><td>$718</td><td>$3,334</td><td>The Edit</td><td>⚠ Low Family Fit</td></tr>
-      <tr><td class="rn">3</td><td>JW Marriott Ihilani</td><td>7.7</td><td>9/10</td><td>$586</td><td>$2,344</td><td>Bonvoy</td><td>⭐ Value Find</td></tr>
-      <tr><td class="rn">4</td><td>Royal Hawaiian</td><td>7.5</td><td>6/10</td><td>$691</td><td>$3,224</td><td>FHR + Bonvoy ★★</td><td>Double Stack</td></tr>
-      <tr><td class="rn">5</td><td>Ka Laʻi Waikiki (LXR)</td><td>7.4</td><td>4/10</td><td>$644</td><td>$3,034</td><td>Hilton + FHR ★★</td><td>⚠ Adults-Leaning</td></tr>
-      <tr><td class="rn">6</td><td>Kahala Hotel & Resort</td><td>7.1</td><td>6/10</td><td>$546</td><td>$2,644</td><td>Amex FHR</td><td>⭐ Value Find</td></tr>
-      <tr><td class="rn">7</td><td>Ritz-Carlton Turtle Bay</td><td>7.0</td><td>7/10</td><td>$855</td><td>$3,879</td><td>The Edit + Bonvoy ★★</td><td>Remote Location</td></tr>
-    </tbody>
-  </table>
-</div>
-
+<div id="site-header"></div>
+<div id="scoring-panel"></div>
+<div id="filter-bar"></div>
+<div id="top3-section"></div>
+<div id="cards-grid" class="cards-grid"></div>
+<div id="summary-section"></div>
 <div class="disclaimer">
-  <strong>Notes:</strong> Rate estimates based on late September shoulder season research — verify exact dates on property sites or OTAs. Hawaii taxes ~14.96% (GET + TAT). Resort fees confirmed where possible; always verify at booking. Program participation (Amex FHR, Chase The Edit) subject to change — confirm before booking. Benefit estimates use $90–95/day for breakfast at Hawaii luxury properties. Scores are directional assessments based on May 2026 research. ★★ = Double stack (two programs apply to same property). Four Seasons image © Four Seasons Hotels Limited.
+  <strong>Notes:</strong> Rate estimates based on late September shoulder season research — verify exact dates on property sites or OTAs.
+  Hawaii taxes ~14.96% (GET 4.712% + TAT 10.25%). Resort fees confirmed where possible; always verify at booking.
+  Program participation (Amex FHR, Chase The Edit) subject to change — confirm before booking.
+  Benefit estimates use $90–95/day for breakfast at Hawaii luxury properties.
+  Scores are directional assessments based on May 2026 research.
+  ★ = Recommended room for your traveler profile (2 adults + 1 toddler).
+  Top 3 section updates dynamically as you adjust scoring weights.
+  Four Seasons image © Four Seasons Hotels Limited.
 </div>
-
 <script>
+// ===================== DATA =====================
+const AMENITY_CONFIG = [
+  {key:'pool',icon:'🏊',label:'Pool'},
+  {key:'spa',icon:'💆',label:'Spa'},
+  {key:'gym',icon:'💪',label:'Fitness'},
+  {key:'beach',icon:'🏖️',label:'Beach'},
+  {key:'restaurant',icon:'🍽️',label:'Restaurant'},
+  {key:'roomService',icon:'🛎️',label:'Room Service'},
+  {key:'childcare',icon:'👶',label:'Kids Program'},
+  {key:'waterSports',icon:'🏄',label:'Water Sports'},
+  {key:'bar',icon:'🍸',label:'Bar/Lounge'},
+  {key:'fullKitchen',icon:'🍳',label:'Full Kitchen'},
+  {key:'privatePool',icon:'🌊',label:'Private Pool'},
+  {key:'parking',icon:'🅿️',label:'Parking'}
+];
+
+const TRIPS = {
+'hawaii-2026': {
+  id:'hawaii-2026', name:'Oahu, Hawaii', emoji:'🌺',
+  dates:'Late Sep – Early Oct 2026', nights:4,
+  travelers:{adults:2,children:1,childAges:['toddler']},
+  travelersLabel:'2 adults + 1 toddler',
+  nonNegotiables:['pool'],
+  programs:['fhr','chase','bonvoy','hyatt','hilton'],
+  programsLabel:'Amex FHR · Chase The Edit · Bonvoy · Hyatt · Hilton',
+  defaultWeights:{location:20,design:20,service:30,family:15,review:15},
+  properties:[
+  {
+    id:'fs', name:'Four Seasons Resort Oahu at Ko Olina',
+    type:'resort', tier:'Ultra-Premium', zone:'ko-olina', allInclusive:false,
+    gradient:'gradient-fs',
+    photoUrl:'https://www.fourseasons.com/alt/img-opt/~70.1530.0,0000-1016,4409-2000,0000-1125,0000/publish/content/dam/fourseasons/images/web/OAH/OAH_2469_original.jpg',
+    galleryUrl:'https://www.fourseasons.com/oahu/photos-and-videos/',
+    bookingUrl:'https://www.fourseasons.com/oahu/', bookingLabel:'Book Direct',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60654-d8684459-Reviews-Four_Seasons_Resort_Oahu_At_Ko_Olina-Kapolei_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Four+Seasons+Resort+Oahu+Ko+Olina',
+    programs:{fhr:true,bonvoy:false,hyatt:false,hilton:false,chase:false}, doubleStack:false,
+    scores:{location:8,design:9,service:10,family:10,review:9},
+    reviews:{rating:9.2,count:847,
+      positives:['Exceptional private lagoon & dedicated Keiki Pool','Unmatched family programming and staff attentiveness','World-class dining with oceanfront setting'],
+      concerns:['Price premium — even luxury travelers note the cost; FHR benefits offset significantly'],
+      familySignal:'Best-in-class — dedicated Keiki Pool, complimentary kids program, fully stroller-friendly campus'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:true,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Garden View King',rate:720,familyRec:false},
+      {name:'Ocean View King',rate:900,familyRec:false},
+      {name:'Ocean View Jr Suite',rate:1100,familyRec:true},
+      {name:'Two-Bedroom Suite',rate:1800,familyRec:false}
+    ],
+    resortFee:0, taxRate:0.1496,
+    benefit:{program:'fhr',bkfstPerDay:95,credit:100,notes:'Amex FHR confirmed'},
+    top3why:'The benchmark everything else is measured against. Keiki Pool + private lagoon are purpose-built for this exact trip.',
+    description:'Pinnacle of Hawaiian luxury with lagoon setting, multiple pools, and unmatched family programming.'
+  },
+  {
+    id:'jw', name:'JW Marriott Ihilani Resort & Spa',
+    subtitle:'Ko Olina, Oahu',
+    type:'resort', tier:'Classic Luxury', zone:'ko-olina', allInclusive:false,
+    gradient:'gradient-jw', photoUrl:null,
+    galleryUrl:'https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/photos/',
+    bookingUrl:'https://www.marriott.com/en-us/hotels/hnljw-jw-marriott-ihilani-resort-and-spa-at-ko-olina/overview/',
+    bookingLabel:'Book / Bonvoy',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60654-d114082-Reviews-JW_Marriott_Ihilani_Resort_Spa_At_Ko_Olina-Kapolei_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/JW+Marriott+Ihilani+Ko+Olina',
+    programs:{fhr:false,bonvoy:true,hyatt:false,hilton:false,chase:false}, doubleStack:false,
+    scores:{location:7,design:7,service:7,family:9,review:8},
+    reviews:{rating:8.4,count:1243,
+      positives:['Zero-entry family pool is exceptional for toddlers','Best value luxury resort in Ko Olina','Warm staff and beautifully maintained grounds'],
+      concerns:['Design feels dated compared to newer properties','Limited dining options without a car'],
+      familySignal:'Strong — zero-entry pool and kids programs, stroller-friendly lagoon path'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:true,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Garden View Room',rate:380,familyRec:false},
+      {name:'Ocean View King',rate:475,familyRec:true},
+      {name:'Deluxe Ocean View',rate:550,familyRec:false},
+      {name:'Junior Suite',rate:750,familyRec:false}
+    ],
+    resortFee:40, taxRate:0.1496,
+    benefit:{program:'bonvoy',bkfstPerDay:0,credit:0,notes:'Marriott Bonvoy points & status — no hard breakfast/credit benefit at standard rates'},
+    top3why:'Best value on the list. Zero-entry pool is purpose-built for a toddler, Ko Olina location matches the #1 pick at a fraction of the effective cost.',
+    description:'Family-focused resort with exceptional zero-entry pool, broad amenity set, and strong Bonvoy value.'
+  },
+  {
+    id:'hal', name:'Halekulani Hotel',
+    type:'boutique', tier:'Ultra-Premium', zone:'waikiki', allInclusive:false,
+    gradient:'gradient-hal', photoUrl:null,
+    galleryUrl:'https://www.halekulani.com/facilities/pool/',
+    bookingUrl:'https://www.halekulani.com/', bookingLabel:'Book Direct',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60982-d90015-Reviews-Halekulani_Hotel-Honolulu_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Halekulani+Hotel+Waikiki',
+    programs:{fhr:false,bonvoy:false,hyatt:false,hilton:false,chase:true}, doubleStack:false,
+    scores:{location:9,design:9,service:9,family:5,review:8},
+    reviews:{rating:9.0,count:682,
+      positives:['Most serene pool experience in Waikiki','Impeccable service and staff attention to detail','La Mer dining is a standout culinary experience'],
+      concerns:['Decidedly adult-oriented — limited family infrastructure','Limited beach space compared to resort alternatives'],
+      familySignal:'Weak — intimate luxury hotel; quiet atmosphere not optimized for toddlers'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:false,waterSports:false,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Superior Room',rate:580,familyRec:false},
+      {name:'Deluxe Ocean View',rate:725,familyRec:false},
+      {name:'Family Suite',rate:950,familyRec:true},
+      {name:'Orchid Suite',rate:1400,familyRec:false}
+    ],
+    resortFee:0, taxRate:0.1496,
+    benefit:{program:'chase',bkfstPerDay:90,credit:100,notes:'Chase The Edit — verify current participation before booking'},
+    top3why:null,
+    description:"Waikiki's most refined boutique experience. Exceptional for design-focused travelers; low family fit for this specific trip."
+  },
+  {
+    id:'royal', name:'The Royal Hawaiian',
+    subtitle:'Luxury Collection Resort, Waikiki',
+    type:'resort', tier:'Classic Luxury', zone:'waikiki', allInclusive:false,
+    gradient:'gradient-royal', photoUrl:null,
+    galleryUrl:'https://www.royal-hawaiian.com/photo-tour/',
+    bookingUrl:'https://www.marriott.com/en-us/hotels/hnllc-the-royal-hawaiian-a-luxury-collection-resort-waikiki/overview/',
+    bookingLabel:'Book / Bonvoy',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60982-d114024-Reviews-The_Royal_Hawaiian_a_Luxury_Collection_Resort_Waikiki-Honolulu_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Royal+Hawaiian+Hotel+Waikiki',
+    programs:{fhr:true,bonvoy:true,hyatt:false,hilton:false,chase:false}, doubleStack:true,
+    scores:{location:9,design:8,service:7,family:6,review:7},
+    reviews:{rating:8.8,count:1876,
+      positives:['Iconic pink palace — unmatched character and history','Best beachfront positioning in Waikiki','Double program stack delivers strong combined value'],
+      concerns:['Service inconsistency noted in recent reviews','Shared beach with Sheraton can feel crowded'],
+      familySignal:'Moderate — prime beachfront is family-friendly; no dedicated toddler programming'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:false,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Garden Room',rate:520,familyRec:false},
+      {name:'Ocean View Room',rate:675,familyRec:true},
+      {name:'Ocean Suite',rate:1100,familyRec:false},
+      {name:'Pink Palace Suite',rate:1800,familyRec:false}
+    ],
+    resortFee:30, taxRate:0.1496,
+    benefit:{program:'fhr',bkfstPerDay:90,credit:100,notes:'Amex FHR + Marriott Bonvoy — strongest double-stack on the list'},
+    top3why:'Best Waikiki choice for energy, history, and program stacking. FHR + Bonvoy double-stack is the most powerful combined benefit story.',
+    description:"The iconic pink palace with unmatched Waikiki beachfront presence and the list's strongest loyalty double-stack."
+  },
+  {
+    id:'kah', name:'The Kahala Hotel & Resort',
+    type:'boutique', tier:'Ultra-Premium', zone:'waikiki', allInclusive:false,
+    gradient:'gradient-kah', photoUrl:null,
+    galleryUrl:'https://www.kahalaresort.com/luxury-hotel/hi-res-image-gallery/kahala-resort/',
+    bookingUrl:'https://www.kahalaresort.com/', bookingLabel:'Book Direct',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60982-d114008-Reviews-The_Kahala_Hotel_Resort-Honolulu_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Kahala+Hotel+Resort+Honolulu',
+    programs:{fhr:true,bonvoy:false,hyatt:false,hilton:false,chase:false}, doubleStack:false,
+    scores:{location:6,design:8,service:8,family:6,review:7},
+    reviews:{rating:9.1,count:543,
+      positives:['Dolphin lagoon is a genuinely unique family draw','Serene residential setting away from Waikiki chaos','Personalized, intimate service with high guest recognition'],
+      concerns:['15 minutes from Waikiki — car required for most activities','Limited on-property dining and nightlife'],
+      familySignal:'Moderate — dolphin program is a unique toddler draw; pool is smaller than resort alternatives'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:true,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Deluxe Room',rate:490,familyRec:false},
+      {name:'Ocean View Room',rate:575,familyRec:true},
+      {name:'Junior Suite',rate:750,familyRec:false},
+      {name:'Cabana Suite',rate:1200,familyRec:false}
+    ],
+    resortFee:0, taxRate:0.1496,
+    benefit:{program:'fhr',bkfstPerDay:90,credit:100,notes:'Amex FHR confirmed — strong value at this price point'},
+    top3why:null,
+    description:'Intimate boutique hotel with unique dolphin lagoon and FHR benefits. Best effective value; requires a car.'
+  },
+  {
+    id:'lxr', name:'Ka Laʻi Waikiki Beach',
+    subtitle:'LXR Hotels & Resorts · Hilton',
+    type:'boutique', tier:'Ultra-Premium', zone:'waikiki', allInclusive:false,
+    gradient:'gradient-lxr', photoUrl:null,
+    galleryUrl:'https://www.hilton.com/en/hotels/hnlwiol-ka-lai-waikiki-beach/resort/',
+    bookingUrl:'https://www.hilton.com/en/hotels/hnlwiol-ka-lai-waikiki-beach/',
+    bookingLabel:'Book / Hilton',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60982-d1484551-Reviews-Ka_La_i_Waikiki_Beach_Lxr_Hotels_Resorts-Honolulu_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Ka+Lai+Waikiki+Beach+LXR',
+    programs:{fhr:true,bonvoy:false,hyatt:false,hilton:true,chase:false}, doubleStack:true,
+    scores:{location:8,design:9,service:9,family:4,review:7},
+    reviews:{rating:8.6,count:421,
+      positives:['Best design aesthetic in Waikiki — beautifully curated property','Adults-only pool is a standout luxury experience','Prime Waikiki beachfront location'],
+      concerns:['Adults-focused throughout — toddler experience is notably limited','Premium pricing vs. service delivery gap in recent reviews'],
+      familySignal:'Weak — adults-first property; lowest family fit on the list'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:false,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Studio Suite',rate:580,familyRec:false},
+      {name:'Ocean View Suite',rate:625,familyRec:false},
+      {name:'One-Bedroom Suite',rate:850,familyRec:true},
+      {name:'Penthouse Suite',rate:1500,familyRec:false}
+    ],
+    resortFee:40, taxRate:0.1496,
+    benefit:{program:'fhr',bkfstPerDay:90,credit:100,notes:'Amex FHR + Hilton Honors double-stack — FHR drives hard dollar savings'},
+    top3why:null,
+    description:"Waikiki's most design-forward property. Best suited for design-first travelers without toddlers."
+  },
+  {
+    id:'rc', name:'Ritz-Carlton Oʻahu, Turtle Bay',
+    type:'resort', tier:'Ultra-Premium', zone:'north-shore', allInclusive:false,
+    gradient:'gradient-rc', photoUrl:null,
+    galleryUrl:'https://www.marriott.com/en-us/hotels/hnlrz-the-ritz-carlton-oahu-turtle-bay/photos/',
+    bookingUrl:'https://www.marriott.com/en-us/hotels/hnlrz-the-ritz-carlton-oahu-turtle-bay/overview/',
+    bookingLabel:'Book / Bonvoy',
+    taUrl:'https://www.tripadvisor.com/Hotel_Review-g60651-d87158-Reviews-The_Ritz_Carlton_O_ahu_Turtle_Bay-Kahuku_Oahu_Hawaii.html',
+    gUrl:'https://www.google.com/maps/search/Ritz+Carlton+Oahu+Turtle+Bay',
+    programs:{fhr:false,bonvoy:true,hyatt:false,hilton:false,chase:true}, doubleStack:true,
+    scores:{location:5,design:8,service:8,family:7,review:7},
+    reviews:{rating:8.7,count:894,
+      positives:['Dramatic North Shore setting — unmatched coastal drama','Best outdoor activity and golf programming on Oahu','More space and calm than any Waikiki alternative'],
+      concerns:['45–50 minute drive from Honolulu — true destination commitment','Limited dining and nightlife without a car'],
+      familySignal:'Good — wide open spaces, beach, kids activities; distance from the city is the key tradeoff'
+    },
+    amenities:{pool:true,spa:true,gym:true,beach:true,restaurant:true,roomService:true,childcare:true,waterSports:true,bar:true,fullKitchen:false,privatePool:false,parking:true},
+    rooms:[
+      {name:'Ocean View Room',rate:700,familyRec:false},
+      {name:'Deluxe Ocean View',rate:800,familyRec:true},
+      {name:'Junior Suite',rate:1050,familyRec:false},
+      {name:'Oceanfront Suite',rate:1600,familyRec:false}
+    ],
+    resortFee:50, taxRate:0.1496,
+    benefit:{program:'chase',bkfstPerDay:90,credit:100,notes:'Chase The Edit + Marriott Bonvoy — verify The Edit participation before booking'},
+    top3why:null,
+    description:'North Shore escape for travelers who want dramatic nature over city access. Best outdoor experience on the list.'
+  }
+  ]
+}
+};
+
+// ===================== STATE =====================
+let currentTripId = 'hawaii-2026';
+let weights = {location:20,design:20,service:30,family:15,review:15};
+let roomSelections = {};
+let filters = {mode:'all',zone:'all',program:'all',sort:'composite'};
+let scoringOpen = false;
+
+// ===================== COMPUTED =====================
+function trip(){ return TRIPS[currentTripId]; }
+function prop(id){ return trip().properties.find(p=>p.id===id); }
+
+function getSelectedRoomIdx(p){
+  if(roomSelections[p.id] !== undefined) return roomSelections[p.id];
+  const fi = p.rooms.findIndex(r=>r.familyRec);
+  return fi >= 0 ? fi : 0;
+}
+function getSelectedRoom(p){ return p.rooms[getSelectedRoomIdx(p)]; }
+
+function computeComposite(p){
+  let wl=weights.location, wd=weights.design, ws=weights.service, wf=weights.family, wr=weights.review;
+  if(p.type==='rental'||p.type==='villa'){
+    const tot=wl+wd+wf+wr;
+    if(tot>0){wl=wl/tot*100;wd=wd/tot*100;wf=wf/tot*100;wr=wr/tot*100;} ws=0;
+  }
+  const tot=wl+wd+ws+wf+wr;
+  if(tot===0) return 0;
+  const raw=(p.scores.location*wl+p.scores.design*wd+p.scores.service*ws+p.scores.family*wf+p.scores.review*wr)/tot;
+  return Math.round(raw*10)/10;
+}
+
+function computeCosts(p){
+  const t=trip();
+  const room=getSelectedRoom(p);
+  const baseTotal=room.rate*t.nights;
+  const taxes=Math.round(baseTotal*p.taxRate);
+  const resortFees=p.resortFee*t.nights;
+  const gross=baseTotal+taxes+resortFees;
+  let benefitValue=0, benefitLines=[];
+  const b=p.benefit;
+  if(b.bkfstPerDay && b.bkfstPerDay>0){
+    const bk=b.bkfstPerDay*t.nights;
+    benefitValue+=bk;
+    const prog=b.program==='fhr'?'Amex FHR':b.program==='chase'?'Chase The Edit':'Program';
+    benefitLines.push({label:`${prog} breakfast (${t.nights} nights)`,amt:bk});
+  }
+  if(b.credit && b.credit>0){
+    benefitValue+=b.credit;
+    const prog=b.program==='fhr'?'Amex FHR':b.program==='chase'?'Chase The Edit':'Program';
+    benefitLines.push({label:`${prog} property credit`,amt:b.credit});
+  }
+  const effective=gross-benefitValue;
+  const effectiveNightly=Math.round(effective/t.nights);
+  return {room,baseTotal,taxes,resortFees,gross,benefitValue,benefitLines,effective,effectiveNightly};
+}
+
+function getMissingNNs(p){
+  return trip().nonNegotiables.filter(nn=>!p.amenities[nn]);
+}
+
+function scClass(v){ return v>=8?'sv-hi':v>=6?'sv-md':'sv-lo'; }
+function zoneName(z){ return z==='ko-olina'?'Ko Olina':z==='waikiki'?'Waikiki':'North Shore'; }
+
+// ===================== RENDER =====================
+function renderAll(){
+  renderHeader(); renderScoringPanel(); renderFilterBar();
+  renderTop3(); renderCardsGrid(); renderSummary();
+}
+
+function renderHeader(){
+  const t=trip();
+  const opts=Object.values(TRIPS).map(tr=>`<option value="${tr.id}"${tr.id===currentTripId?' selected':''}>${tr.emoji} ${tr.name} — ${tr.dates}</option>`).join('');
+  document.getElementById('site-header').innerHTML=`
+    <div class="header-top">
+      <div><h1>🏨 Lodging Evaluator</h1><div class="subtitle">Criteria-driven · Loyalty-aware · Cost-transparent</div></div>
+      <div class="trip-switcher"><label>Active Trip</label><select onchange="switchTrip(this.value)">${opts}</select></div>
+    </div>
+    <div class="trip-meta">
+      <span class="trip-pill">📍 ${t.name}</span>
+      <span class="trip-pill">📅 ${t.dates}</span>
+      <span class="trip-pill">🌙 ${t.nights} nights</span>
+      <span class="trip-pill">👨‍👩‍👧 ${t.travelersLabel}</span>
+      ${t.nonNegotiables.map(nn=>`<span class="trip-pill trip-pill-req">✓ ${nn} required</span>`).join('')}
+      <span class="trip-pill">💳 ${t.programsLabel}</span>
+    </div>`;
+}
+
+function renderScoringPanel(){
+  const w=weights;
+  const tot=Object.values(w).reduce((a,b)=>a+b,0);
+  const pct=k=>tot>0?Math.round(w[k]/tot*100):20;
+  const dims=[
+    {k:'location',label:'Location & Access'},
+    {k:'design',label:'Design & Experience'},
+    {k:'service',label:'Service'},
+    {k:'family',label:'Family / Toddler Fit'},
+    {k:'review',label:'Review Confidence'}
+  ];
+  document.getElementById('scoring-panel').innerHTML=`
+    <div class="sp-toggle" onclick="toggleScoring()">
+      ⚖️ Adjust Scoring Weights — tune what matters most to re-rank all properties live
+      <span id="sp-arrow">▼</span>
+    </div>
+    <div class="sp-body${scoringOpen?' open':''}" id="sp-body">
+      <div class="sliders-grid">
+        ${dims.map(d=>`
+          <div class="slider-row">
+            <label>${d.label} <span class="wt-pct" id="wt-${d.k}">${pct(d.k)}%</span></label>
+            <input type="range" min="0" max="50" value="${w[d.k]}" id="sl-${d.k}" oninput="onSliderChange()">
+          </div>`).join('')}
+      </div>
+      <div class="sp-actions">
+        <button class="sp-reset" onclick="resetWeights()">↺ Reset to defaults</button>
+        <span class="sp-note">Weights normalize to 100% automatically. Rentals & villas exclude Service.</span>
+      </div>
+    </div>`;
+}
+
+function renderFilterBar(){
+  const t=trip();
+  const zones=[{v:'all',l:'All Zones'},{v:'ko-olina',l:'Ko Olina'},{v:'waikiki',l:'Waikiki'},{v:'north-shore',l:'North Shore'}];
+  const progs=[{v:'all',l:'All Programs'},{v:'fhr',l:'Amex FHR'},{v:'bonvoy',l:'Bonvoy'},{v:'hilton',l:'Hilton'},{v:'hyatt',l:'Hyatt'},{v:'chase',l:'Chase The Edit'}];
+  const sorts=[{v:'composite',l:'Composite Score ↓'},{v:'effective',l:'Eff. Rate ↑'},{v:'family',l:'Family Fit ↓'},{v:'gross',l:'Gross Total ↑'}];
+  document.getElementById('filter-bar').innerHTML=`
+    <label>Type:</label>
+    <div class="mode-group">
+      <button class="mode-btn${filters.mode==='all'?' active':''}" onclick="setFilter('mode','all',this)">All Types</button>
+      <button class="mode-btn${filters.mode==='hotels'?' active':''}" onclick="setFilter('mode','hotels',this)">Hotels & Resorts</button>
+      <button class="mode-btn${filters.mode==='rentals'?' active':''}" onclick="setFilter('mode','rentals',this)">Rentals</button>
+    </div>
+    <div class="sep"></div>
+    <label>Zone:</label>
+    <select class="filter-select" onchange="setFilter('zone',this.value)">
+      ${zones.map(z=>`<option value="${z.v}"${filters.zone===z.v?' selected':''}>${z.l}</option>`).join('')}
+    </select>
+    <label>Program:</label>
+    <select class="filter-select" onchange="setFilter('program',this.value)">
+      ${progs.map(pg=>`<option value="${pg.v}"${filters.program===pg.v?' selected':''}>${pg.l}</option>`).join('')}
+    </select>
+    <div class="sep"></div>
+    <label>Sort:</label>
+    <select class="filter-select" onchange="setFilter('sort',this.value)">
+      ${sorts.map(s=>`<option value="${s.v}"${filters.sort===s.v?' selected':''}>${s.l}</option>`).join('')}
+    </select>`;
+}
+
+function renderTop3(){
+  const t=trip();
+  const sorted=[...t.properties].map(p=>({p,c:computeComposite(p)})).sort((a,b)=>b.c-a.c).slice(0,3);
+  const rankClass=['rank-1','rank-2','rank-3'];
+  document.getElementById('top3-section').innerHTML=`
+    <h2>⭐ Top 3 by Current Scoring</h2>
+    <div class="top3-sub">Updates live as you adjust scoring weights above. Curated for your profile: quality-elastic traveler, toddler in tow, multi-program holder.</div>
+    <div class="top3-grid">
+    ${sorted.map(({p,c},i)=>{
+      const costs=computeCosts(p);
+      const imgStyle=p.photoUrl
+        ?`style="background-image:url('${p.photoUrl}');background-size:cover;background-position:center;"`
+        :`class="${p.gradient}"`;
+      const overlay=p.photoUrl?`<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(0,0,0,.55))"></div>`:
+        `<div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.1),rgba(0,0,0,.55))"></div>`;
+      return `<div class="top3-card">
+        <div class="top3-img" ${imgStyle}>
+          ${overlay}
+          <div class="top3-rank ${rankClass[i]}">${i+1}</div>
+          <div class="top3-name">${p.name}</div>
+        </div>
+        <div class="top3-body">
+          <div class="top3-why">${p.top3why||p.description}</div>
+          <div class="top3-stats">
+            <div class="top3-stat"><div class="val">${c}</div><div class="lbl">Composite</div></div>
+            <div class="top3-stat"><div class="val">${p.scores.family}/10</div><div class="lbl">Family Fit</div></div>
+            <div class="top3-stat"><div class="val">$${costs.effectiveNightly.toLocaleString()}</div><div class="lbl">Eff/Night</div></div>
+          </div>
+          <a href="#card-${p.id}" class="top3-link" onclick="scrollTo('${p.id}')">View Full Details ↓</a>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+function renderCardsGrid(){
+  const t=trip();
+  document.getElementById('cards-grid').innerHTML=t.properties.map(p=>cardHTML(p)).join('');
+  applyView();
+}
+
+function cardHTML(p){
+  const t=trip();
+  const composite=computeComposite(p);
+  const costs=computeCosts(p);
+  const missingNNs=getMissingNNs(p);
+  const roomIdx=getSelectedRoomIdx(p);
+
+  // Photo section
+  let photoSection;
+  if(p.photoUrl){
+    photoSection=`<div class="card-photo" id="photo-${p.id}">
+      <img src="${p.photoUrl}" alt="${p.name}" onerror="this.style.display='none';this.parentElement.classList.add('${p.gradient}');document.getElementById('pfb-${p.id}').style.display='flex';">
+      <div class="photo-fallback" id="pfb-${p.id}"><span class="photo-icon">🏨</span></div>
+      <div class="photo-overlay"></div>
+      <div class="photo-badge-row">
+        <span class="badge badge-${p.type}">${p.type.charAt(0).toUpperCase()+p.type.slice(1)}</span>
+        ${p.allInclusive?'<span class="badge badge-ai">All-Incl.</span>':''}
+        ${p.doubleStack?'<span class="badge badge-ds">★★</span>':''}
+      </div>
+      ${p.galleryUrl?`<a href="${p.galleryUrl}" target="_blank" class="photo-link-btn">📸 Photos</a>`:''}
+    </div>`;
+  } else {
+    photoSection=`<div class="card-photo ${p.gradient}" id="photo-${p.id}">
+      <div class="photo-overlay"></div>
+      <span class="photo-icon">🏨</span>
+      <div class="photo-badge-row">
+        <span class="badge badge-${p.type}">${p.type.charAt(0).toUpperCase()+p.type.slice(1)}</span>
+        ${p.allInclusive?'<span class="badge badge-ai">All-Incl.</span>':''}
+        ${p.doubleStack?'<span class="badge badge-ds">★★</span>':''}
+      </div>
+      ${p.galleryUrl?`<a href="${p.galleryUrl}" target="_blank" class="photo-link-btn">📸 Photos</a>`:''}
+    </div>`;
+  }
+
+  // Score bars
+  const scoreRows=[
+    {label:'Location & Access',v:p.scores.location},
+    {label:'Design & Experience',v:p.scores.design},
+    ...(p.type!=='rental'&&p.type!=='villa'?[{label:'Service',v:p.scores.service}]:[]),
+    {label:'Family / Toddler Fit',v:p.scores.family},
+    {label:'Review Confidence',v:p.scores.review}
+  ].map(s=>`<div class="score-row">
+    <span class="score-label">${s.label}</span>
+    <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${s.v*10}%"></div></div>
+    <span class="score-val ${scClass(s.v)}">${s.v}</span>
+  </div>`).join('');
+
+  // Amenities
+  const amenHTML=AMENITY_CONFIG.map(a=>{
+    const has=p.amenities[a.key];
+    const isNN=t.nonNegotiables.includes(a.key);
+    const miss=isNN&&!has;
+    return `<div class="amenity-item${has?'':' lacks'}${miss?' missing-nn':''}">
+      <span class="amenity-icon">${a.icon}</span>
+      <span>${a.label}${miss?' ⚠️':''}</span>
+    </div>`;
+  }).join('');
+
+  // Programs
+  const progLines=[];
+  if(p.programs.fhr) progLines.push({cls:'pb-fhr',lbl:'FHR',txt:'Amex Fine Hotels + Resorts — breakfast, $100 property credit, upgrade & early check-in/late checkout'});
+  if(p.programs.bonvoy) progLines.push({cls:p.doubleStack?'pb-double':'pb-bonvoy',lbl:'BNV',txt:p.doubleStack?'Marriott Bonvoy ★★ double-stack — points, status, and potential upgrades':'Marriott Bonvoy — points & status; use Bonvoy rate for point earning'});
+  if(p.programs.hilton) progLines.push({cls:p.doubleStack?'pb-double':'pb-hilton',lbl:'HH',txt:p.doubleStack?'Hilton Honors ★★ double-stack — Diamond recognition + FHR breakfast benefit':'Hilton Honors — points & Diamond recognition'});
+  if(p.programs.chase) progLines.push({cls:'pb-chase',lbl:'CSR',txt:'Chase Sapphire The Edit — breakfast, $100 experience credit, upgrade when available'});
+  const benefitTotal=(p.benefit.bkfstPerDay||0)*t.nights+(p.benefit.credit||0);
+  const progHTML=progLines.length===0
+    ?`<div style="font-size:12px;color:var(--muted)">No enrolled programs — book direct or through OTA.</div>`
+    :progLines.map(l=>`<div class="prog-row"><span class="prog-badge ${l.cls}">${l.lbl}</span><span>${l.txt}</span></div>`).join('')
+     +(benefitTotal>0
+       ?`<div class="benefit-val">Estimated benefit value: ~$${benefitTotal.toLocaleString()} · ${p.benefit.notes}</div>`
+       :`<div class="benefit-val" style="background:#eef2ff;color:#002855">${p.benefit.notes}</div>`);
+
+  // Room selector
+  const roomOpts=p.rooms.map((r,i)=>
+    `<option value="${i}"${i===roomIdx?' selected':''}>${r.name} — $${r.rate.toLocaleString()}/night${r.familyRec?' ★':''}</option>`
+  ).join('');
+
+  // Tier tag based on cost
+  const rack=p.rooms[roomIdx].rate;
+  const budgetTag=rack>=1100?'Luxury':'Premium';
+
+  return `<div class="card" id="card-${p.id}"
+    data-composite="${composite}"
+    data-effective="${costs.effectiveNightly}"
+    data-family="${p.scores.family}"
+    data-gross="${costs.gross}"
+    data-zone="${p.zone}"
+    data-type="${p.type}"
+    data-fhr="${p.programs.fhr}"
+    data-bonvoy="${p.programs.bonvoy}"
+    data-hilton="${p.programs.hilton}"
+    data-hyatt="${p.programs.hyatt}"
+    data-chase="${p.programs.chase}">
+
+    ${photoSection}
+
+    <div class="card-header">
+      <div class="card-header-top">
+        <div class="property-name">${p.name}${p.subtitle?`<br><span class="prop-subtitle">${p.subtitle}</span>`:''}</div>
+        <div class="composite-badge" id="badge-${p.id}">${composite}</div>
+      </div>
+      <div class="tier-row">
+        <span class="tag tag-tier">${p.tier}</span>
+        <span class="tag tag-zone">${zoneName(p.zone)}</span>
+        ${missingNNs.length>0?`<span class="badge badge-warn">⚠️ No ${missingNNs.join(', ')}</span>`:''}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Room Type <span style="font-weight:400;text-transform:none;font-size:10px;letter-spacing:0">— ★ = recommended for your traveler profile</span></div>
+      <select class="room-select" onchange="refreshRoom('${p.id}',parseInt(this.value))">${roomOpts}</select>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Evaluation Scores</div>
+      ${scoreRows}
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Amenities</div>
+      <div class="amenities-grid">${amenHTML}</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Review Intelligence &nbsp;·&nbsp; <span style="font-weight:400;text-transform:none;letter-spacing:0">${p.reviews.rating}/10 · ${p.reviews.count.toLocaleString()} reviews</span></div>
+      ${p.reviews.positives.map(t=>`<div class="theme"><span style="color:var(--green)">✓</span><span>${t}</span></div>`).join('')}
+      ${p.reviews.concerns.map(t=>`<div class="theme"><span style="color:var(--warn)">⚠</span><span>${t}</span></div>`).join('')}
+      <div class="family-box"><strong>👨‍👩‍👧 Family / Toddler Signal</strong>${p.reviews.familySignal}</div>
+    </div>
+
+    <div class="section">
+      <div class="sec-title">Loyalty & Card Programs</div>
+      ${progHTML}
+    </div>
+
+    <div class="section" id="cost-${p.id}">
+      ${costsHTML(p,costs)}
+    </div>
+
+    <div class="links-section">
+      <a href="${p.bookingUrl}" target="_blank" class="lbtn lb-primary">🔗 ${p.bookingLabel}</a>
+      ${p.galleryUrl?`<a href="${p.galleryUrl}" target="_blank" class="lbtn lb-sec">📸 Photos</a>`:''}
+      <a href="${p.taUrl}" target="_blank" class="lbtn lb-rev">TripAdvisor</a>
+      <a href="${p.gUrl}" target="_blank" class="lbtn lb-rev">Google Reviews</a>
+    </div>
+  </div>`;
+}
+
+function costsHTML(p,costs){
+  const t=trip();
+  return `<div class="sec-title">Rolled-Up Cost Estimate (${t.nights} nights)</div>
+    <table class="cost-table">
+      <tr><td>${costs.room.name} (~$${costs.room.rate.toLocaleString()}/night × ${t.nights})</td><td>$${costs.baseTotal.toLocaleString()}</td></tr>
+      <tr><td>Hawaii taxes (GET + TAT ~14.96%)</td><td>$${costs.taxes.toLocaleString()}</td></tr>
+      <tr><td>Resort fee${p.resortFee>0?` (~$${p.resortFee}/night × ${t.nights})`:''}${p.resortFee===0?' — confirmed $0':''}</td><td>${p.resortFee>0?`$${costs.resortFees.toLocaleString()}`:'$0'}</td></tr>
+      <tr class="ct-div ct-gross"><td>GROSS TOTAL</td><td>$${costs.gross.toLocaleString()}</td></tr>
+      ${costs.benefitLines.map(bl=>`<tr class="ct-ben"><td>− ${bl.label}</td><td>−$${bl.amt.toLocaleString()}</td></tr>`).join('')}
+    </table>
+    <div class="cost-eff">
+      <div><div class="ce-label">Effective Total</div><div class="ce-sub">${p.benefit.notes}</div></div>
+      <div style="text-align:right"><div class="ce-amt">$${costs.effective.toLocaleString()}</div><div class="ce-night">$${costs.effectiveNightly.toLocaleString()}/night effective</div></div>
+    </div>`;
+}
+
+function renderSummary(){
+  const t=trip();
+  const sorted=[...t.properties].map(p=>({p,c:computeComposite(p),costs:computeCosts(p)})).sort((a,b)=>b.c-a.c);
+  const pb=p=>{
+    const b=[];
+    if(p.programs.fhr) b.push('<span class="prog-badge pb-fhr">FHR</span>');
+    if(p.programs.bonvoy) b.push('<span class="prog-badge pb-bonvoy">BNV</span>');
+    if(p.programs.hilton) b.push('<span class="prog-badge pb-hilton">HH</span>');
+    if(p.programs.hyatt) b.push('<span class="prog-badge pb-hyatt">WOH</span>');
+    if(p.programs.chase) b.push('<span class="prog-badge pb-chase">CSR</span>');
+    return b.join(' ');
+  };
+  document.getElementById('summary-section').innerHTML=`
+    <h2>Summary Rankings</h2>
+    <table class="sum-table">
+      <thead><tr><th>#</th><th>Property</th><th>Composite</th><th>Family Fit</th><th>Eff./Night</th><th>Gross (${t.nights}n)</th><th>Programs</th><th>Flags</th></tr></thead>
+      <tbody>${sorted.map(({p,c,costs},i)=>`
+        <tr>
+          <td class="rn">#${i+1}</td>
+          <td><a href="#card-${p.id}" onclick="scrollTo('${p.id}')" style="color:inherit;text-decoration:none;font-weight:500">${p.name}</a></td>
+          <td><strong>${c}</strong></td>
+          <td>${p.scores.family}/10</td>
+          <td>$${costs.effectiveNightly.toLocaleString()}</td>
+          <td>$${costs.gross.toLocaleString()}</td>
+          <td>${pb(p)}</td>
+          <td>${p.doubleStack?'<span class="tag tag-value">★★</span> ':''}${getMissingNNs(p).length>0?`<span class="badge badge-warn">⚠️</span>`:''}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ===================== INTERACTIONS =====================
+function scrollTo(id){
+  const el=document.getElementById('card-'+id);
+  if(el) el.scrollIntoView({behavior:'smooth'});
+  return false;
+}
+
+function toggleScoring(){
+  scoringOpen=!scoringOpen;
+  const body=document.getElementById('sp-body');
+  const arrow=document.getElementById('sp-arrow');
+  if(body){ body.className='sp-body'+(scoringOpen?' open':''); }
+  if(arrow){ arrow.textContent=scoringOpen?'▲':'▼'; }
+}
+
+function onSliderChange(){
+  const dims=['location','design','service','family','review'];
+  dims.forEach(k=>{weights[k]=parseInt(document.getElementById('sl-'+k).value)||0;});
+  const tot=Object.values(weights).reduce((a,b)=>a+b,0);
+  dims.forEach(k=>{
+    const pct=tot>0?Math.round(weights[k]/tot*100):20;
+    document.getElementById('wt-'+k).textContent=pct+'%';
+  });
+  // Update composite badges + data attributes
+  trip().properties.forEach(p=>{
+    const c=computeComposite(p);
+    const badge=document.getElementById('badge-'+p.id);
+    const card=document.getElementById('card-'+p.id);
+    if(badge) badge.textContent=c;
+    if(card) card.setAttribute('data-composite',c);
+  });
+  if(filters.sort==='composite') sortCards();
+  renderTop3();
+  renderSummary();
+}
+
+function resetWeights(){
+  const dw=trip().defaultWeights;
+  weights={...dw};
+  ['location','design','service','family','review'].forEach(k=>{
+    const sl=document.getElementById('sl-'+k);
+    if(sl) sl.value=dw[k];
+    const wt=document.getElementById('wt-'+k);
+    if(wt) wt.textContent=dw[k]+'%';
+  });
+  onSliderChange();
+}
+
+function refreshRoom(propId,idx){
+  roomSelections[propId]=idx;
+  const p=prop(propId);
+  if(!p) return;
+  const costs=computeCosts(p);
+  const costEl=document.getElementById('cost-'+propId);
+  if(costEl) costEl.innerHTML=costsHTML(p,costs);
+  const card=document.getElementById('card-'+propId);
+  if(card){
+    card.setAttribute('data-effective',costs.effectiveNightly);
+    card.setAttribute('data-gross',costs.gross);
+  }
+  if(filters.sort==='effective'||filters.sort==='gross') sortCards();
+  renderSummary();
+}
+
+function setFilter(key,val,el){
+  filters[key]=val;
+  if(key==='mode'&&el){
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    el.classList.add('active');
+  }
+  applyView();
+}
+
+function applyView(){
+  trip().properties.forEach(p=>{
+    const card=document.getElementById('card-'+p.id);
+    if(!card) return;
+    let show=true;
+    if(filters.mode==='hotels') show=show&&(p.type==='resort'||p.type==='boutique');
+    if(filters.mode==='rentals') show=show&&(p.type==='villa'||p.type==='rental');
+    if(filters.zone!=='all') show=show&&p.zone===filters.zone;
+    if(filters.program!=='all') show=show&&p.programs[filters.program]===true;
+    card.style.display=show?'':'none';
+  });
+  sortCards();
+}
+
 function sortCards(){
-  const v=document.getElementById('sortSelect').value;
-  const g=document.getElementById('cardGrid');
-  const cards=[...g.querySelectorAll('.card')];
+  const grid=document.getElementById('cards-grid');
+  if(!grid) return;
+  const cards=Array.from(grid.querySelectorAll('.card'));
   cards.sort((a,b)=>{
-    if(v==='composite') return parseFloat(b.dataset.composite)-parseFloat(a.dataset.composite);
-    if(v==='effective') return parseFloat(a.dataset.effective)-parseFloat(b.dataset.effective);
-    if(v==='family')    return parseFloat(b.dataset.family)-parseFloat(a.dataset.family);
-    if(v==='gross')     return parseFloat(a.dataset.gross)-parseFloat(b.dataset.gross);
+    switch(filters.sort){
+      case 'composite': return parseFloat(b.dataset.composite)-parseFloat(a.dataset.composite);
+      case 'effective': return parseInt(a.dataset.effective)-parseInt(b.dataset.effective);
+      case 'family': return parseInt(b.dataset.family)-parseInt(a.dataset.family);
+      case 'gross': return parseInt(a.dataset.gross)-parseInt(b.dataset.gross);
+      default: return 0;
+    }
   });
-  cards.forEach(c=>g.appendChild(c));
+  cards.forEach(c=>grid.appendChild(c));
 }
-function filterCards(type,btn){
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.card').forEach(card=>{
-    card.classList.remove('hidden');
-    if(type==='ko-olina' && card.dataset.zone!=='ko-olina') card.classList.add('hidden');
-    if(type==='waikiki'  && card.dataset.zone!=='waikiki')  card.classList.add('hidden');
-    if(type==='value'    && card.dataset.value!=='true')    card.classList.add('hidden');
-    if(type==='fhr'      && card.dataset.fhr!=='true')      card.classList.add('hidden');
-    if(type==='top3'     && card.dataset.top3!=='true')     card.classList.add('hidden');
-  });
+
+function switchTrip(id){
+  currentTripId=id;
+  roomSelections={};
+  weights={...TRIPS[id].defaultWeights};
+  filters={mode:'all',zone:'all',program:'all',sort:'composite'};
+  scoringOpen=false;
+  renderAll();
 }
+
+// ===================== INIT =====================
+renderAll();
 </script>
 </body>
 </html>
