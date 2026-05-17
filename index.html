@@ -470,13 +470,59 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
   .cards-grid.grid-view{grid-template-columns:1fr;}
 }
 
+
+/* ---- Help Modal ---- */
+.site-header-inner { display:flex; align-items:flex-start; justify-content:space-between; max-width:900px; margin:0 auto; }
+.help-btn { padding:.35rem .85rem; background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:20px; cursor:pointer; font-size:.8rem; font-weight:600; flex-shrink:0; margin-top:.25rem; }
+.help-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+.help-modal-box { max-width:660px; }
+.help-pane { }
+.help-title { font-size:1rem; font-weight:700; color:#e6edf3; margin:0 0 .75rem; }
+.help-body { font-size:.85rem; color:#8b949e; line-height:1.6; margin:0 0 .75rem; }
+.help-steps { display:flex; flex-direction:column; gap:.85rem; margin-bottom:1rem; }
+.help-step { display:flex; gap:.85rem; align-items:flex-start; }
+.step-num { width:26px; height:26px; background:#1f6feb; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; flex-shrink:0; margin-top:.1rem; }
+.step-content { flex:1; }
+.step-content strong { display:block; color:#e6edf3; font-size:.88rem; margin-bottom:.2rem; }
+.step-content p { font-size:.82rem; color:#8b949e; margin:0; line-height:1.55; }
+.help-tip { display:flex; gap:.6rem; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:.65rem .85rem; font-size:.8rem; color:#8b949e; line-height:1.5; }
+.tip-icon { flex-shrink:0; font-size:1rem; }
+.help-link { color:#58a6ff; text-decoration:none; }
+.help-link:hover { text-decoration:underline; }
+.score-explainers { display:flex; flex-direction:column; gap:.5rem; margin-bottom:.5rem; }
+.score-exp-row { display:flex; gap:.75rem; font-size:.82rem; }
+.score-exp-label { min-width:160px; color:#e6edf3; font-weight:600; flex-shrink:0; }
+.score-exp-desc { color:#8b949e; line-height:1.5; }
+.cost-formula { background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:.85rem 1rem; font-size:.82rem; display:flex; flex-direction:column; gap:.3rem; }
+.formula-row { display:flex; justify-content:space-between; color:#8b949e; }
+.formula-row.divider { border-top:1px solid #21262d; padding-top:.3rem; margin-top:.1rem; color:#e6edf3; font-weight:700; }
+.formula-row.benefit-row { color:#2ecc71; }
+.formula-eq { color:#6e7681; }
+.formula-eq.green { color:#2ecc71; }
+.formula-eq.highlight { color:#f0c040; font-weight:700; }
+.share-paths { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.5rem; }
+.share-path { background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:.85rem; }
+.share-path-title { font-weight:700; color:#e6edf3; font-size:.88rem; margin-bottom:.2rem; }
+.share-path-who { font-size:.72rem; color:#58a6ff; margin-bottom:.4rem; }
+.share-path-desc { font-size:.78rem; color:#8b949e; line-height:1.5; }
+@media(max-width:540px){
+  .share-paths{grid-template-columns:1fr;}
+  .score-exp-label{min-width:120px;}
+  .modal-tabs{flex-wrap:wrap;gap:.25rem;}
+}
+
 </style>
 </head>
 <body>
 
 <div id="site-header">
-  <div class="site-title">🧳 Lodging Evaluator</div>
-  <div class="site-subtitle">Structured travel intelligence · Powered by real criteria</div>
+  <div class="site-header-inner">
+    <div>
+      <div class="site-title">🧳 Lodging Evaluator</div>
+      <div class="site-subtitle">Structured travel intelligence · Powered by real criteria</div>
+    </div>
+    <button class="help-btn" onclick="showHelp()" title="How to use this tool">? Help</button>
+  </div>
 </div>
 
 <div id="intake-section">
@@ -1850,6 +1896,134 @@ function toggleWeightsPanel(){
   const p=document.getElementById('scoring-panel');
   if(p) p.style.display=p.style.display==='none'?'block':'none';
 }
+
+// Help modal
+function showHelp() {
+  document.getElementById('help-overlay').style.display='flex';
+  switchHelpTab('start');
+}
+function closeHelp() {
+  document.getElementById('help-overlay').style.display='none';
+}
+function switchHelpTab(tab) {
+  ['start','scores','costs','share'].forEach(t => {
+    const pane = document.getElementById('hpane-'+t);
+    if (pane) pane.style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.modal-tab[data-htab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.htab === tab);
+  });
+}
+
 </script>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="help-overlay" style="display:none" onclick="if(event.target===this)closeHelp()">
+  <div class="modal-box help-modal-box">
+    <div class="modal-header">
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-htab="start" onclick="switchHelpTab('start')">🚀 Getting Started</button>
+        <button class="modal-tab" data-htab="scores" onclick="switchHelpTab('scores')">⚖️ Scores</button>
+        <button class="modal-tab" data-htab="costs" onclick="switchHelpTab('costs')">💰 Costs</button>
+        <button class="modal-tab" data-htab="share" onclick="switchHelpTab('share')">👥 Sharing</button>
+      </div>
+      <button class="modal-close" onclick="closeHelp()">✕</button>
+    </div>
+
+    <!-- Getting Started -->
+    <div id="hpane-start" class="help-pane" style="overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">How to use this tool</h3>
+      <div class="help-steps">
+        <div class="help-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Fill out the intake form</strong>
+            <p>Enter your destination (start typing for suggestions), select travel dates from the calendar, set your traveler count, and tap your must-haves and loyalty programs.</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Click Generate Research →</strong>
+            <p>The form collapses and two action buttons appear — <em>Cowork Brief</em> for Cowork users, <em>Claude.ai Prompt</em> for everyone else. The Hawaii dashboard also loads as a live example.</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Copy your prompt → paste into Claude</strong>
+            <p>Click <strong>🤖 Claude.ai Prompt</strong>, copy it, and paste into <a href="https://claude.ai" target="_blank" class="help-link">claude.ai</a> (free account works). Claude returns a ranked shortlist with scores and full cost breakdowns for your destination.</p>
+          </div>
+        </div>
+      </div>
+      <div class="help-tip">
+        <span class="tip-icon">💡</span>
+        <span>The <strong>pre-loaded Hawaii dashboard</strong> below is a live example — use it to explore scores, adjust weight sliders, switch room types, and see how the cost model works before running your own trip.</span>
+      </div>
+    </div>
+
+    <!-- Scores -->
+    <div id="hpane-scores" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">How scoring works</h3>
+      <p class="help-body">Each property is scored 0–10 across five dimensions, then combined into a 0–100 composite score using weighted averages.</p>
+      <div class="score-explainers">
+        <div class="score-exp-row"><span class="score-exp-label">📍 Location / Access</span><span class="score-exp-desc">Proximity to key areas, beach/pool access, ease of transportation, neighborhood quality</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">🎨 Design / Experience</span><span class="score-exp-desc">Architecture, room quality, aesthetic, unique features, overall wow factor</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">🛎️ Service</span><span class="score-exp-desc">Staff quality, responsiveness, personalization. <em>Excluded for villas/rentals — weight redistributed proportionally.</em></span></div>
+        <div class="score-exp-row"><span class="score-exp-label">👨‍👩‍👧 Family Suitability</span><span class="score-exp-desc">Fit for your traveler profile — age-appropriate amenities, safety, kids' programming</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">⭐ Review Confidence</span><span class="score-exp-desc">Consumer signal quality — volume, recency, positive themes, recurring concerns</span></div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">🎚️</span>
+        <span>Use the <strong>Weights sliders</strong> in the dashboard to re-rank properties for your priorities. Romantic trip? Lower Family, raise Service. Adventure trip? Raise Location.</span>
+      </div>
+    </div>
+
+    <!-- Costs -->
+    <div id="hpane-costs" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">Understanding the cost breakdown</h3>
+      <p class="help-body">Every property shows a full cost rollup. The <strong>effective nightly rate</strong> is the most useful number for comparing properties — it's your real spend after all deductions.</p>
+      <div class="cost-formula">
+        <div class="formula-row">Nightly rate × nights <span class="formula-eq">= Base total</span></div>
+        <div class="formula-row">+ Local taxes (~15% in Hawaii) <span class="formula-eq">= Tax amount</span></div>
+        <div class="formula-row">+ Resort fee × nights <span class="formula-eq">= Resort fees</span></div>
+        <div class="formula-row divider">= <strong>Gross total</strong></div>
+        <div class="formula-row benefit-row">− Breakfast credit (FHR / Chase The Edit) <span class="formula-eq green">Deduction</span></div>
+        <div class="formula-row benefit-row">− Property F&amp;B / hotel credit <span class="formula-eq green">Deduction</span></div>
+        <div class="formula-row divider">= <strong>Effective total</strong></div>
+        <div class="formula-row">÷ nights <span class="formula-eq highlight">= Effective nightly ★</span></div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">💡</span>
+        <span>A $1,100/night property with Amex FHR (breakfast $80/day × 4 nights + $100 credit = $420 back) costs <strong>$680 effective</strong> — cheaper than a "cheaper" $900/night property with no benefits.</span>
+      </div>
+      <p class="help-body" style="margin-top:.75rem;">Select your loyalty programs and cards in the intake form. Only programs you hold are applied to the calculation. You can also switch room types on each property card — the cost updates instantly.</p>
+    </div>
+
+    <!-- Sharing -->
+    <div id="hpane-share" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">Sharing with friends</h3>
+      <p class="help-body">Two people can use this tool in completely different ways:</p>
+      <div class="share-paths">
+        <div class="share-path">
+          <div class="share-path-title">⚡ Cowork Mode</div>
+          <div class="share-path-who">For: Tool owner with Cowork</div>
+          <div class="share-path-desc">Generates a compact brief. Paste directly into a Cowork session with Claude for a full research response and live dashboard.</div>
+        </div>
+        <div class="share-path">
+          <div class="share-path-title">🤖 Claude.ai Mode</div>
+          <div class="share-path-who">For: Friends with any Claude account</div>
+          <div class="share-path-desc">Generates a full research prompt with the scoring methodology embedded. Paste into <a href="https://claude.ai" target="_blank" class="help-link">claude.ai</a> (free account works). Claude returns a scored shortlist — no special setup required.</div>
+        </div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">📋</span>
+        <span>When sharing the Claude.ai prompt with friends, the full evaluation framework is embedded — so their results follow the same scoring standard, even without any prior context.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
