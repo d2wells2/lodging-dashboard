@@ -335,6 +335,9 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 .cal-day.in-range { background:rgba(31,111,235,.25); }
 .cal-footer { display:flex; align-items:center; gap:1rem; padding-top:.75rem; font-size:.85rem; color:#8b949e; }
 .cal-clear-btn { background:none; border:1px solid #30363d; color:#e6edf3; border-radius:6px; padding:.2rem .5rem; cursor:pointer; font-size:.8rem; margin-left:auto; }
+.cal-done-btn { background:#2e7d32; color:#fff; border:none; border-radius:4px; padding:4px 14px; cursor:pointer; font-size:12px; font-weight:600; margin-left:6px; }
+.cal-done-btn:hover { background:#1b5e20; }
+.cal-done-hint { font-size:12px; color:#2e7d32; font-weight:600; margin-right:8px; }
 .travelers-row { display:flex; gap:2rem; }
 .traveler-group { display:flex; align-items:center; gap:.75rem; }
 .traveler-label { font-size:.85rem; color:#8b949e; min-width:50px; }
@@ -701,11 +704,11 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 <div id="scoring-panel" style="display:none">
   <div class="scoring-title">⚖️ Adjust Scoring Weights</div>
   <div class="sliders-grid">
-    <div class="slider-row"><label>Location</label><input type="range" id="w-location" min="0" max="50" value="20" oninput="refreshWeights()"><span id="wv-location" class="w-val">20%</span></div>
-    <div class="slider-row"><label>Design</label><input type="range" id="w-design" min="0" max="50" value="20" oninput="refreshWeights()"><span id="wv-design" class="w-val">20%</span></div>
-    <div class="slider-row"><label>Service</label><input type="range" id="w-service" min="0" max="50" value="30" oninput="refreshWeights()"><span id="wv-service" class="w-val">30%</span></div>
-    <div class="slider-row"><label>Family</label><input type="range" id="w-family" min="0" max="50" value="15" oninput="refreshWeights()"><span id="wv-family" class="w-val">15%</span></div>
-    <div class="slider-row"><label>Reviews</label><input type="range" id="w-review" min="0" max="50" value="15" oninput="refreshWeights()"><span id="wv-review" class="w-val">15%</span></div>
+    <div class="slider-row"><label>Location</label><input type="range" id="w-location" min="0" max="100" value="20" oninput="refreshWeights('location')"><span id="wv-location" class="w-val">20%</span></div>
+    <div class="slider-row"><label>Design</label><input type="range" id="w-design" min="0" max="100" value="20" oninput="refreshWeights('design')"><span id="wv-design" class="w-val">20%</span></div>
+    <div class="slider-row"><label>Service</label><input type="range" id="w-service" min="0" max="100" value="30" oninput="refreshWeights('service')"><span id="wv-service" class="w-val">30%</span></div>
+    <div class="slider-row"><label>Family</label><input type="range" id="w-family" min="0" max="100" value="15" oninput="refreshWeights('family')"><span id="wv-family" class="w-val">15%</span></div>
+    <div class="slider-row"><label>Reviews</label><input type="range" id="w-review" min="0" max="100" value="15" oninput="refreshWeights('review')"><span id="wv-review" class="w-val">15%</span></div>
   </div>
 </div>
 
@@ -895,7 +898,7 @@ const TRIPS = {
           {name:'Junior Suite — Ocean View',rate:1395,beds:'King + sofa bed',sqft:1200,familyRec:false},
           {name:'One-Bedroom Suite',rate:1895,beds:'King + living room',sqft:1400,familyRec:false}
         ],
-        photo:null,
+        photo:'https://www.fourseasons.com/alt/img-opt/~70.1530.0,0000-400,5000-3000,0000-1687,5000/publish/content/dam/fourseasons/images/web/OAH/OAH_331_original.jpg',
         photoGradient:'linear-gradient(135deg,#1a5276,#2980b9,#85c1e9)',
         galleryUrl:'https://www.fourseasons.com/oahu/photo-gallery/',
         reviewHighlights:{
@@ -945,7 +948,7 @@ const TRIPS = {
           {name:'Ocean View Room',rate:895,beds:'King',sqft:485,familyRec:false},
           {name:'Junior Ocean View Suite',rate:1295,beds:'King + sofa bed',sqft:720,familyRec:true}
         ],
-        photo:null,
+        photo:'https://www.halekulani.com/wp-content/uploads/2024/03/HKU_Pool_Sunrise_02_web.jpg',
         photoGradient:'linear-gradient(135deg,#d4a017,#f0c040,#f8e8a0)',
         galleryUrl:'https://www.halekulani.com/gallery',
         reviewHighlights:{
@@ -970,7 +973,7 @@ const TRIPS = {
           {name:'Mailani Premier Ocean Room',rate:750,beds:'King',sqft:470,familyRec:false},
           {name:'Mailani Ocean Suite',rate:1295,beds:'King + separate living room',sqft:950,familyRec:false}
         ],
-        photo:null,
+        photo:'https://www.royal-hawaiian.com/datas/images/2022/11/02/de233b03eb6880819293e5279e798232cee93aa0.jpg',
         photoGradient:'linear-gradient(135deg,#8b1a4a,#c0395e,#e87ca0)',
         galleryUrl:'https://www.royal-hawaiian.com/photo-gallery/',
         reviewHighlights:{
@@ -1045,7 +1048,7 @@ const TRIPS = {
           {name:'Oceanfront Club Room',rate:1195,beds:'King, RC Club lounge access',sqft:500,familyRec:false},
           {name:"Ali\'i Suite",rate:2095,beds:'2 bedrooms, sweeping North Shore views',sqft:1800,familyRec:false}
         ],
-        photo:null,
+        photo:'https://cache.marriott.com/is/image/marriotts7prod/rz-hnlkz-aerial-turtle-11922:Wide-Hor?wid=1336&fit=constrain',
         photoGradient:'linear-gradient(135deg,#2d4a22,#4a7c59,#7dba8f)',
         galleryUrl:'https://www.ritzcarlton.com/en/hotels/hnlkz-the-ritz-carlton-oahu-turtle-bay/rooms/',
         reviewHighlights:{
@@ -1137,7 +1140,7 @@ function renderCalendar() {
     <div class="cal-footer">
       ${formState.startDate ? `<span>From: <strong>${formState.startDate}</strong></span>` : '<span>Select start date</span>'}
       ${formState.endDate ? `<span>  To: <strong>${formState.endDate}</strong></span>` : (formState.startDate ? '<span>  Select end date</span>' : '')}
-      ${formState.startDate && formState.endDate ? `<button onclick="clearDates()" class="cal-clear-btn">Clear</button>` : ''}
+      ${formState.startDate && formState.endDate ? `<span class="cal-done-hint">Dates set ✓</span><button onclick="clearDates()" class="cal-clear-btn">Clear</button><button onclick="toggleCalendar(false)" class="cal-done-btn">Done ✓</button>` : ''}
     </div>`;
 }
 
@@ -1155,9 +1158,7 @@ function selectDate(iso) {
   }
   updateDateDisplay();
   renderCalendar();
-  if (formState.startDate && formState.endDate) {
-    setTimeout(() => { calState.open = false; toggleCalendar(false); }, 400);
-  }
+  // calendar stays open — user clicks Done ✓ or clicks outside
 }
 
 function clearDates() {
@@ -1841,12 +1842,54 @@ function renderSummary() {
   </div>`;
 }
 
-function refreshWeights() {
-  ['location','design','service','family','review'].forEach(k => {
-    const el = document.getElementById('w-'+k);
-    if (el) weights[k] = parseInt(el.value);
-    const lbl = document.getElementById('wv-'+k);
-    if (lbl) lbl.textContent = weights[k]+'%';
+function refreshWeights(changedKey) {
+  const allKeys = ['location','design','service','family','review'];
+  if (changedKey) {
+    // Proportional redistribution so weights always sum to 100
+    const changedEl = document.getElementById('w-' + changedKey);
+    if (!changedEl) return;
+    const newVal = Math.min(100, Math.max(0, parseInt(changedEl.value)));
+    const remaining = 100 - newVal;
+    const otherKeys = allKeys.filter(k => k !== changedKey);
+    const otherTotal = otherKeys.reduce((sum, k) => sum + weights[k], 0);
+    weights[changedKey] = newVal;
+    if (otherTotal === 0) {
+      // Distribute evenly if all others are zero
+      const share = Math.floor(remaining / otherKeys.length);
+      let leftover = remaining;
+      otherKeys.forEach((k, i) => {
+        if (i === otherKeys.length - 1) { weights[k] = leftover; }
+        else { weights[k] = share; leftover -= share; }
+      });
+    } else {
+      // Proportional: scale others to fill remaining
+      let assigned = 0;
+      otherKeys.forEach((k, i) => {
+        if (i === otherKeys.length - 1) {
+          weights[k] = Math.max(0, remaining - assigned);
+        } else {
+          const proportion = weights[k] / otherTotal;
+          weights[k] = Math.max(0, Math.round(proportion * remaining));
+          assigned += weights[k];
+        }
+      });
+    }
+    // Sync all slider positions back
+    allKeys.forEach(k => {
+      const el = document.getElementById('w-' + k);
+      if (el) el.value = weights[k];
+    });
+  } else {
+    // No key = initial load; just read current slider values
+    allKeys.forEach(k => {
+      const el = document.getElementById('w-' + k);
+      if (el) weights[k] = parseInt(el.value);
+    });
+  }
+  // Update all labels
+  allKeys.forEach(k => {
+    const lbl = document.getElementById('wv-' + k);
+    if (lbl) lbl.textContent = weights[k] + '%';
   });
   // Re-render composite scores on all cards
   trip().properties.forEach(p => {
