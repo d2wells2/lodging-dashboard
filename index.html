@@ -511,18 +511,64 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
   .modal-tabs{flex-wrap:wrap;gap:.25rem;}
 }
 
+
+/* ---- Site header fix: centered title, absolute help btn ---- */
+.site-header-inner { display:none; } /* kill old wrapper if still present */
+#site-header { position:relative; text-align:center; padding:2rem 1rem 1.25rem; }
+.help-btn { position:absolute; top:1.25rem; right:1.25rem; padding:.35rem .85rem;
+  background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:20px;
+  cursor:pointer; font-size:.8rem; font-weight:600; }
+.help-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+
+/* ---- Top3 card — name overlaid on gradient ---- */
+.top3-card { position:relative; background:#161b22; border:1px solid #30363d;
+  border-radius:12px; overflow:hidden; }
+.top3-header { position:relative; height:120px; overflow:hidden; }
+.top3-medal { position:absolute; top:.6rem; left:.7rem; font-size:1.4rem; z-index:3; }
+.top3-score-badge { position:absolute; top:.6rem; right:.7rem; background:rgba(0,0,0,.65);
+  color:#fff; font-weight:800; font-size:1.5rem; padding:.15rem .5rem; border-radius:8px;
+  backdrop-filter:blur(4px); z-index:3; }
+.top3-name-overlay { position:absolute; bottom:0; left:0; right:0; z-index:3;
+  background:linear-gradient(transparent, rgba(0,0,0,.80));
+  color:#fff; font-size:.88rem; font-weight:700; line-height:1.3;
+  padding:.5rem .8rem .55rem; }
+.top3-body { padding:.7rem .85rem .85rem; }
+.top3-location { font-size:.75rem; color:#6e7681; margin-bottom:.3rem; }
+.top3-cost { font-weight:700; color:#58a6ff; font-size:.88rem; margin-bottom:.3rem; }
+.top3-highlight { font-size:.75rem; color:#8b949e; font-style:italic; line-height:1.4; }
+
+/* ---- Table view ---- */
+.cards-grid.table-view { display:block; }
+.tbl-scroll { overflow-x:auto; border-radius:10px; border:1px solid #30363d; }
+.prop-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.prop-table thead tr { background:#1c2128; }
+.prop-table th { padding:.6rem .85rem; text-align:left; color:#6e7681; font-size:.72rem;
+  text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #30363d;
+  white-space:nowrap; }
+.tbl-row { border-bottom:1px solid #21262d; transition:background .15s; }
+.tbl-row:hover { background:#1c2128; }
+.tbl-row:last-child { border-bottom:none; }
+.prop-table td { padding:.6rem .85rem; vertical-align:middle; }
+.tbl-rank { font-size:1.1rem; text-align:center; width:36px; }
+.tbl-prop-name { font-weight:700; color:#e6edf3; font-size:.82rem; margin-bottom:.15rem; }
+.tbl-prop-sub { font-size:.72rem; color:#6e7681; }
+.tbl-score-num { font-size:1.1rem; font-weight:800; color:#58a6ff; }
+.tbl-room-name { color:#e6edf3; font-size:.8rem; margin-bottom:.1rem; }
+.tbl-room-sub { font-size:.7rem; color:#6e7681; }
+.tbl-eff-val { font-size:.95rem; color:#f0c040; }
+.tbl-eff-label { font-size:.7rem; color:#6e7681; }
+.tbl-gross { color:#8b949e; }
+.tbl-check { color:#2ecc71; font-weight:700; font-size:.9rem; }
+.tbl-miss { color:#e74c3c; font-weight:700; font-size:.9rem; }
+
 </style>
 </head>
 <body>
 
 <div id="site-header">
-  <div class="site-header-inner">
-    <div>
-      <div class="site-title">🧳 Lodging Evaluator</div>
-      <div class="site-subtitle">Structured travel intelligence · Powered by real criteria</div>
-    </div>
-    <button class="help-btn" onclick="showHelp()" title="How to use this tool">? Help</button>
-  </div>
+  <div class="site-title">🧳 Lodging Evaluator</div>
+  <div class="site-subtitle">Structured travel intelligence · Powered by real criteria</div>
+  <button class="help-btn" onclick="showHelp()" title="How to use this tool">? Help</button>
 </div>
 
 <div id="intake-section">
@@ -686,6 +732,7 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
     <div class="filter-group">
       <button class="view-btn active" data-view="grid" onclick="applyView('grid')">▦ Grid</button>
       <button class="view-btn" data-view="list" onclick="applyView('list')">☰ List</button>
+      <button class="view-btn" data-view="table" onclick="applyView('table')">📊 Table</button>
     </div>
     <div class="filter-group">
       <button class="weights-toggle-btn" onclick="toggleWeightsPanel()">⚖️ Weights</button>
@@ -1753,26 +1800,25 @@ function renderTop3() {
     .map(p => ({...p, composite: computeComposite(p)}))
     .sort((a,b) => b.composite - a.composite)
     .slice(0,3);
-  
-  sec.innerHTML = `<h2 class="section-title">🏆 Top 3 Recommendations</h2>
-  <div class="top3-grid">
-    ${props.map((p,i) => {
+
+  sec.innerHTML = '<h2 class="section-title">\u{1F3C6} Top 3 Recommendations</h2><div class="top3-grid">'
+    + props.map((p,i) => {
       const costs = computeCosts(p);
-      const medals = ['🥇','🥈','🥉'];
-      return `<div class="top3-card">
-        <div class="top3-header" style="background:${p.photoGradient}">
-          <span class="top3-medal">${medals[i]}</span>
-          <div class="top3-score">${p.composite}</div>
-        </div>
-        <div class="top3-body">
-          <div class="top3-name">${p.name}</div>
-          <div class="top3-location">📍 ${p.location}</div>
-          <div class="top3-cost">$${costs.effectiveNightly.toLocaleString()}/nt effective</div>
-          <div class="top3-highlight">${p.reviewHighlights.positive[0]}</div>
-        </div>
-      </div>`;
-    }).join('')}
-  </div>`;
+      const medals = ['\u{1F947}','\u{1F948}','\u{1F949}'];
+      return '<div class="top3-card">'
+        + '<div class="top3-header" style="background:' + p.photoGradient + '">'
+        + '<span class="top3-medal">' + medals[i] + '</span>'
+        + '<div class="top3-score-badge">' + p.composite + '</div>'
+        + '<div class="top3-name-overlay">' + p.name + '</div>'
+        + '</div>'
+        + '<div class="top3-body">'
+        + '<div class="top3-location">\u{1F4CD} ' + p.location + '</div>'
+        + '<div class="top3-cost">$' + costs.effectiveNightly.toLocaleString() + '/nt effective</div>'
+        + '<div class="top3-highlight">' + p.reviewHighlights.positive[0] + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('')
+    + '</div>';
 }
 
 function renderSummary() {
@@ -1825,12 +1871,68 @@ function applySort(val) {
 
 function applyView(val) {
   filters.view = val;
-  const grid = document.getElementById('cards-grid');
-  if (grid) {
-    grid.classList.toggle('list-view', val==='list');
-    grid.classList.toggle('grid-view', val==='grid');
-  }
   document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view===val));
+  if (val === 'table') {
+    renderTableView();
+  } else {
+    const grid = document.getElementById('cards-grid');
+    if (grid) {
+      grid.classList.remove('list-view','grid-view','table-view');
+      grid.classList.add(val === 'list' ? 'list-view' : 'grid-view');
+      grid.innerHTML = '';
+    }
+    renderCards();
+  }
+}
+
+function renderTableView() {
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return;
+  grid.className = 'cards-grid table-view';
+
+  let props = trip().properties.slice();
+  if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
+  props = props.map(p => ({...p, _comp: computeComposite(p), _costs: computeCosts(p)}));
+  props.sort((a,b) => {
+    if (filters.sort === 'composite') return b._comp - a._comp;
+    if (filters.sort === 'effective') return a._costs.effective - b._costs.effective;
+    if (filters.sort === 'gross') return a._costs.gross - b._costs.gross;
+    return 0;
+  });
+
+  const medals = ['\u{1F947}','\u{1F948}','\u{1F949}'];
+  const rows = props.map((p,i) => {
+    const prog = PROGRAM_CONFIG.find(x => x.id === p.loyaltyProgram);
+    const nnMet = trip().nonNegotiables.every(nn => p.amenities.includes(nn));
+    return '<tr class="tbl-row">'
+      + '<td class="tbl-rank">' + (i < 3 ? medals[i] : (i+1)) + '</td>'
+      + '<td class="tbl-name"><div class="tbl-prop-name">' + p.name + '</div>'
+      + '<div class="tbl-prop-sub">📍 ' + p.location + (p.allInclusive ? '  ·  All-Incl.' : '') + '</div></td>'
+      + '<td class="tbl-type"><span class="type-badge">' + p.type + '</span></td>'
+      + '<td class="tbl-score"><span class="tbl-score-num">' + p._comp + '</span></td>'
+      + '<td class="tbl-room"><div class="tbl-room-name">' + p._costs.room.name + '</div>'
+      + '<div class="tbl-room-sub">' + p._costs.room.beds + '  ·  ' + p._costs.room.sqft + 'ft²</div></td>'
+      + '<td class="tbl-eff"><strong class="tbl-eff-val">$' + p._costs.effectiveNightly.toLocaleString() + '</strong><span class="tbl-eff-label">/nt</span></td>'
+      + '<td class="tbl-gross">$' + p._costs.gross.toLocaleString() + '</td>'
+      + '<td class="tbl-prog">' + (prog ? '<span class="chip ' + prog.cls + ' active sm-chip">' + prog.label + '</span>' : '—') + '</td>'
+      + '<td class="tbl-nn">' + (nnMet ? '<span class="tbl-check">✓</span>' : '<span class="tbl-miss">✗</span>') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  grid.innerHTML = '<div class="tbl-scroll"><table class="prop-table">'
+    + '<thead><tr>'
+    + '<th></th>'
+    + '<th>Property</th>'
+    + '<th>Type</th>'
+    + '<th>Score</th>'
+    + '<th>Recommended Room</th>'
+    + '<th>Eff./nt</th>'
+    + '<th>Gross Total</th>'
+    + '<th>Program</th>'
+    + '<th title="Non-negotiables met">✓ Req.</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>';
 }
 
 function applyTripMode(val) {
