@@ -366,6 +366,10 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 .add-btn { padding:.4rem .75rem; background:#1f6feb; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:.82rem; }
 .add-btn:hover { background:#388bfd; }
 .form-actions { margin-top:1.5rem; display:flex; align-items:center; gap:1rem; }
+.research-scope-row{display:flex;gap:16px;flex-wrap:wrap;padding:4px 0;}
+.scope-option{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);transition:border-color .15s;}
+.scope-option:hover{border-color:var(--accent);}
+.scope-option input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
 .submit-btn { padding:.7rem 2rem; background:linear-gradient(135deg,#1f6feb,#388bfd); border:none; color:#fff; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; }
 .submit-btn:hover { background:linear-gradient(135deg,#388bfd,#58a6ff); transform:translateY(-1px); }
 .output-note { font-size:.8rem; color:#6e7681; }
@@ -690,6 +694,24 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 
     </div><!-- /form-grid -->
 
+      <!-- Research Scope -->
+      <div class="form-field full-width">
+        <label class="field-label">🔎 Research Scope <span class="field-hint">What to include in the search</span></label>
+        <div class="research-scope-row">
+          <label class="scope-option">
+            <input type="checkbox" id="research-hotels" checked onchange="updateResearchTypes()">
+            <span>🏨 Hotels &amp; Resorts</span>
+          </label>
+          <label class="scope-option">
+            <input type="checkbox" id="research-rentals" checked onchange="updateResearchTypes()">
+            <span>🏠 Curated Rentals</span>
+            <span class="field-hint" style="margin-left:4px">Plum Guide · onefinestay</span>
+          </label>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
     <div class="form-actions">
       <button class="submit-btn" onclick="submitIntakeForm()">Generate Research →</button>
       <div class="output-note">Generates a structured brief for Claude research</div>
@@ -700,11 +722,6 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 
 <!-- Output Actions (hidden until submit) -->
 <div id="output-actions" style="display:none">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-    <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Research:</span>
-    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-hotels" checked onchange="updateResearchTypes()"> Hotels</label>
-    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-rentals" checked onchange="updateResearchTypes()"> Curated Rentals <span style="font-size:11px;color:var(--muted)">(Plum Guide, onefinestay)</span></label>
-  </div>
   <button class="action-btn primary" onclick="showModal('cowork')">⚡ Cowork Brief</button>
   <button class="action-btn secondary" onclick="showModal('claude')">🤖 Claude.ai Prompt</button>
 </div>
