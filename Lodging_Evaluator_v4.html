@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lodging Evaluator — Travel Intelligence Tool</title>
+<style>
+
+:root{
+  --bg:#f7f5f0;--card:#fff;--border:#e5e0d8;--text:#1a1a1a;--muted:#6b6560;
+  --accent:#1a4a3a;--accent-light:#e8f0ec;--gold:#b8860b;--gold-light:#fdf8ed;
+  --warn:#c0392b;--warn-light:#fdf0ee;--green:#2e7d52;--green-light:#eaf4ee;
+  --blue:#1a3a5c;--blue-light:#eef2f8;--font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:var(--font);color:var(--text);font-size:14px;line-height:1.5;}
+
+/* ── HEADER ── */
+.site-header{background:var(--accent);color:#fff;padding:18px 32px;}
+.header-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.header-brand h1{font-size:20px;font-weight:700;letter-spacing:-.3px;}
+.header-brand .subtitle{font-size:12px;opacity:.7;margin-top:2px;}
+.header-mode{display:flex;align-items:center;gap:10px;}
+.mode-indicator{font-size:11px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.25);}
+.trip-switcher-wrap{display:flex;align-items:center;gap:8px;}
+.trip-switcher-wrap label{font-size:11px;opacity:.65;}
+.trip-switcher-wrap select{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;}
+.trip-switcher-wrap select option{background:#1a4a3a;}
+.trip-meta{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.trip-pill{background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;font-size:12px;}
+.trip-pill-req{background:rgba(255,255,255,.22);font-weight:600;}
+
+/* ── INTAKE FORM ── */
+.intake-section{background:#fff;border-bottom:2px solid var(--border);}
+.intake-toggle{padding:14px 32px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--accent);user-select:none;transition:background .15s;}
+.intake-toggle:hover{background:var(--accent-light);}
+.intake-toggle .itl-left{display:flex;align-items:center;gap:10px;}
+.intake-toggle .itl-tag{background:var(--accent);color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;}
+.intake-body{padding:24px 32px 28px;border-top:1px solid var(--border);display:none;}
+.intake-body.open{display:block;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.form-field{display:flex;flex-direction:column;gap:6px;}
+.form-field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.form-field-full{grid-column:1/-1;}
+
+/* destination search */
+.dest-wrap{position:relative;}
+.dest-input{width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6560' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 11px center;transition:border-color .2s;}
+.dest-input:focus{outline:none;border-color:var(--accent);}
+.dest-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1.5px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:100;max-height:240px;overflow-y:auto;display:none;}
+.dest-dropdown.open{display:block;}
+.dest-item{padding:9px 14px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:8px;}
+.dest-item:hover,.dest-item.active{background:var(--accent-light);}
+.dest-item .di-pin{font-size:12px;opacity:.5;}
+.dest-item .di-main{font-weight:500;}
+.dest-item .di-sub{font-size:11px;color:var(--muted);margin-left:auto;}
+.dest-custom{padding:9px 14px;font-size:12px;color:var(--muted);border-top:1px solid var(--border);cursor:pointer;}
+.dest-custom:hover{background:var(--bg);}
+
+/* date range */
+.date-range-wrap{position:relative;}
+.date-display{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;background:#fff;transition:border-color .2s;}
+.date-display:hover,.date-display.active{border-color:var(--accent);}
+.date-box{flex:1;padding:9px 14px;font-size:14px;}
+.date-box .db-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:block;}
+.date-box .db-val{font-weight:500;color:var(--text);}
+.date-box .db-val.placeholder{color:#bbb;}
+.date-sep{width:1px;background:var(--border);align-self:stretch;}
+.date-nights{padding:0 14px;font-size:12px;color:var(--accent);font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:3px;}
+.cal-popup{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid var(--border);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.12);z-index:200;padding:16px;display:none;min-width:580px;}
+.cal-popup.open{display:block;}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.cal-nav{display:flex;gap:8px;}
+.cal-nav button{background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);}
+.cal-nav button:hover{background:var(--bg);}
+.cal-month-title{font-size:13px;font-weight:600;}
+.cal-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
+.cal-month{min-width:240px;}
+.cal-month-name{text-align:center;font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text);}
+.cal-days-header{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-day-name{text-align:center;font-size:10px;font-weight:600;color:var(--muted);padding:2px;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-day{text-align:center;padding:6px 2px;font-size:12px;cursor:pointer;border-radius:4px;transition:all .1s;position:relative;}
+.cal-day:hover:not(.disabled):not(.empty){background:var(--accent-light);color:var(--accent);}
+.cal-day.disabled{color:#ddd;cursor:default;}
+.cal-day.empty{cursor:default;}
+.cal-day.today{font-weight:700;color:var(--accent);}
+.cal-day.selected-start,.cal-day.selected-end{background:var(--accent);color:#fff;border-radius:4px;}
+.cal-day.in-range{background:var(--accent-light);border-radius:0;}
+.cal-day.in-range-start{border-radius:4px 0 0 4px;}
+.cal-day.in-range-end{border-radius:0 4px 4px 0;}
+.cal-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+
+/* travelers */
+.travelers-grid{display:flex;gap:20px;flex-wrap:wrap;}
+.traveler-row{display:flex;align-items:center;gap:10px;}
+.traveler-row .tr-label{font-size:13px;font-weight:500;min-width:60px;}
+.counter{display:flex;align-items:center;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;}
+.counter button{width:32px;height:36px;background:#fff;border:none;cursor:pointer;font-size:16px;color:var(--accent);transition:background .1s;font-weight:700;}
+.counter button:hover{background:var(--accent-light);}
+.counter .cnt-val{width:36px;text-align:center;font-size:15px;font-weight:600;border-left:1px solid var(--border);border-right:1px solid var(--border);line-height:36px;}
+
+/* chips */
+.chips-wrap{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.chip{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;user-select:none;display:inline-flex;align-items:center;gap:5px;}
+.chip:hover{border-color:var(--accent);color:var(--accent);}
+.chip.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+.chip.prog-fhr.selected{background:#1a1a2e;border-color:#1a1a2e;color:#d4af37;}
+.chip.prog-chase.selected{background:#003087;border-color:#003087;color:#fff;}
+.chip.prog-bonvoy.selected{background:#002855;border-color:#002855;color:#c8a84b;}
+.chip.prog-hilton.selected{background:#00338d;border-color:#00338d;color:#cda323;}
+.chip.prog-hyatt.selected{background:#6b2d8b;border-color:#6b2d8b;color:#fff;}
+.custom-nn-input{padding:6px 12px;border-radius:20px;border:1.5px dashed var(--border);background:#fff;font-size:12px;width:140px;outline:none;}
+.custom-nn-input:focus{border-color:var(--accent);}
+
+/* type + budget buttons */
+.seg-buttons{display:flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;}
+.seg-btn{flex:1;padding:8px 12px;background:#fff;border:none;border-right:1px solid var(--border);font-size:12px;cursor:pointer;color:var(--muted);transition:all .15s;text-align:center;}
+.seg-btn:last-child{border-right:none;}
+.seg-btn:hover{background:var(--accent-light);color:var(--accent);}
+.seg-btn.active{background:var(--accent);color:#fff;}
+.seg-btn .sb-emoji{display:block;font-size:16px;margin-bottom:2px;}
+.seg-btn .sb-range{font-size:10px;opacity:.7;}
+
+/* form footer */
+.form-footer{display:flex;align-items:center;gap:12px;padding-top:20px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.btn-primary{padding:11px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:background .15s;}
+.btn-primary:hover{background:#133a2c;}
+.btn-secondary{padding:11px 24px;background:#fff;color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
+.form-note{font-size:12px;color:var(--muted);flex:1;}
+
+/* ── PROMPT MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:14px;width:100%;max-width:680px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.2);}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:4px;}
+.modal-close:hover{background:var(--bg);}
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);background:#fafaf8;}
+.modal-tab{padding:12px 20px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;}
+.modal-tab:hover{color:var(--text);}
+.modal-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:#fff;}
+.modal-body{padding:20px 24px;overflow-y:auto;flex:1;}
+.modal-panel{display:none;}
+.modal-panel.active{display:block;}
+.prompt-desc{font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.prompt-box{background:#f4f3f0;border:1px solid var(--border);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;max-height:220px;overflow-y:auto;color:var(--text);}
+.modal-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.copy-btn{padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s;}
+.copy-btn:hover{background:#133a2c;}
+.copy-btn.copied{background:var(--green);}
+.open-btn{padding:9px 18px;background:#fff;color:var(--blue);border:1.5px solid var(--blue-light);border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.open-btn:hover{background:var(--blue-light);}
+.modal-info{margin-top:14px;padding:12px 14px;background:var(--accent-light);border-radius:7px;font-size:12px;color:var(--accent);line-height:1.6;}
+
+/* ── SCORING PANEL ── */
+.scoring-panel{background:#fff;border-bottom:1px solid var(--border);}
+.sp-toggle{padding:12px 32px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--accent);user-select:none;}
+.sp-toggle:hover{background:var(--accent-light);}
+.sp-body{padding:16px 32px 20px;border-top:1px solid var(--border);display:none;}
+.sp-body.open{display:block;}
+.sliders-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:12px;}
+.slider-row{display:flex;flex-direction:column;gap:6px;}
+.slider-row label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;}
+.wt-pct{color:var(--accent);font-weight:700;}
+.slider-row input[type=range]{width:100%;accent-color:var(--accent);}
+.sp-actions{display:flex;align-items:center;gap:12px;}
+.sp-reset{padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;color:var(--muted);}
+
+/* ── FILTER BAR ── */
+.filter-bar{padding:12px 32px;background:#f9f8f6;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.filter-bar label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+.mode-group{display:flex;}
+.mode-btn{padding:5px 12px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;color:var(--muted);transition:all .15s;}
+.mode-btn:first-child{border-radius:6px 0 0 6px;}
+.mode-btn:last-child{border-radius:0 6px 6px 0;border-left:0;}
+.mode-btn:not(:first-child):not(:last-child){border-left:0;}
+.mode-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.filter-select{border:1px solid var(--border);padding:5px 9px;border-radius:6px;font-size:12px;background:#fff;cursor:pointer;}
+.sep{width:1px;height:18px;background:var(--border);}
+
+/* ── TOP 3 ── */
+.top3-section{background:#fff;border-bottom:1px solid var(--border);padding:24px 32px;}
+.top3-section h2{font-size:15px;font-weight:700;margin-bottom:3px;}
+.top3-sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.top3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.top3-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.top3-img{height:140px;background-size:cover;background-position:center;position:relative;}
+.top3-rank{position:absolute;top:10px;left:10px;z-index:2;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;}
+.rank-1{background:#c9a227;}.rank-2{background:#8c9aa8;}.rank-3{background:#a0735a;}
+.top3-name{position:absolute;bottom:10px;left:12px;right:12px;z-index:2;color:#fff;font-size:13px;font-weight:600;line-height:1.3;}
+.top3-body{padding:12px;}
+.top3-why{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.top3-stats{display:flex;gap:8px;margin-bottom:10px;}
+.top3-stat{flex:1;background:var(--bg);border-radius:5px;padding:5px 8px;text-align:center;}
+.top3-stat .val{font-size:14px;font-weight:700;color:var(--accent);}
+.top3-stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.top3-link{display:block;text-align:center;padding:7px;border-radius:6px;background:var(--accent);color:#fff;font-size:12px;font-weight:500;text-decoration:none;}
+.top3-link:hover{background:#133a2c;}
+
+/* ── CARDS ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:20px;padding:24px 32px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:box-shadow .2s;}
+.card:hover{box-shadow:0 4px 20px rgba(0,0,0,.09);}
+.card-photo{height:180px;background-size:cover;background-position:center;position:relative;overflow:hidden;}
+.gradient-fs{background:linear-gradient(135deg,#0d3b2e,#1a6b55,#2d9b7f);}
+.gradient-jw{background:linear-gradient(135deg,#0a2744,#1a4a7a,#2e7db5);}
+.gradient-hal{background:linear-gradient(135deg,#5c4208,#a07820,#c9a227);}
+.gradient-royal{background:linear-gradient(135deg,#5c1a35,#9b3060,#c94a80);}
+.gradient-kah{background:linear-gradient(135deg,#1a3d2b,#2e6b4f,#3d9970);}
+.gradient-lxr{background:linear-gradient(135deg,#1a1a2e,#2d2d50,#4a4a7a);}
+.gradient-rc{background:linear-gradient(135deg,#3d2b1a,#6b4a2e,#9b7040);}
+.card-photo .photo-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0) 50%,rgba(0,0,0,.5));}
+.card-photo .photo-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:48px;opacity:.3;}
+.card-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.card-photo .photo-fallback{position:absolute;inset:0;display:none;align-items:center;justify-content:center;}
+.card-photo .photo-link-btn{position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:5px;font-size:11px;text-decoration:none;}
+.photo-badge-row{position:absolute;top:10px;right:10px;display:flex;gap:5px;z-index:2;}
+.badge{padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;}
+.badge-resort{background:#1a4a3a;color:#fff;}.badge-boutique{background:#4a1a3a;color:#fff;}
+.badge-villa{background:#1a3a4a;color:#fff;}.badge-rental{background:#3a3a1a;color:#fff;}
+.badge-ai{background:#8B0000;color:#ffd700;}.badge-ds{background:var(--green);color:#fff;}
+.badge-warn{background:var(--warn-light);color:var(--warn);border:1px solid var(--warn);}
+.card-header{padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.card-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.property-name{font-size:15px;font-weight:600;line-height:1.3;}
+.prop-subtitle{font-size:12px;font-weight:400;color:var(--muted);}
+.composite-badge{background:var(--accent);color:#fff;border-radius:7px;padding:4px 10px;font-size:15px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.tier-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;align-items:center;}
+.tag{padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;}
+.tag-tier{background:var(--accent-light);color:var(--accent);}
+.tag-zone{background:var(--blue-light);color:var(--blue);}
+.tag-value{background:var(--green-light);color:var(--green);font-weight:600;}
+.section{padding:13px 18px;border-bottom:1px solid var(--border);}
+.sec-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:9px;}
+.room-select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:#fff;cursor:pointer;}
+.score-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.score-label{font-size:12px;color:var(--muted);width:140px;flex-shrink:0;}
+.score-bar-wrap{flex:1;height:5px;background:#e5e0d8;border-radius:3px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:3px;background:var(--accent);}
+.score-val{font-size:12px;font-weight:600;width:26px;text-align:right;}
+.sv-hi{color:var(--green);}.sv-md{color:var(--gold);}.sv-lo{color:var(--warn);}
+.amenities-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
+.amenity-item{display:flex;align-items:center;gap:5px;padding:5px 7px;border-radius:6px;background:var(--bg);font-size:12px;}
+.amenity-item.lacks{opacity:.35;text-decoration:line-through;}
+.amenity-item.missing-nn{background:var(--warn-light);color:var(--warn);opacity:1;text-decoration:none;font-weight:600;}
+.amenity-icon{font-size:14px;flex-shrink:0;}
+.theme{display:flex;gap:6px;font-size:12px;margin-bottom:5px;align-items:flex-start;line-height:1.4;}
+.family-box{margin-top:9px;padding:8px 10px;background:#f0f5ff;border-radius:6px;font-size:12px;color:var(--blue);}
+.family-box strong{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px;}
+.prog-row{display:flex;gap:7px;align-items:flex-start;font-size:12px;margin-bottom:5px;}
+.prog-badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:1px;}
+.pb-fhr{background:#1a1a2e;color:#d4af37;}.pb-chase{background:#003087;color:#fff;}
+.pb-hyatt{background:#6b2d8b;color:#fff;}.pb-bonvoy{background:#002855;color:#c8a84b;}
+.pb-hilton{background:#00338d;color:#cda323;}.pb-double{background:var(--green);color:#fff;}
+.benefit-val{margin-top:7px;padding:6px 10px;background:var(--green-light);border-radius:5px;font-size:12px;color:var(--green);font-weight:500;}
+.cost-table{width:100%;font-size:12px;border-collapse:collapse;}
+.cost-table td{padding:3px 0;}
+.cost-table td:last-child{text-align:right;color:var(--muted);}
+.ct-div td{border-top:1px solid var(--border);padding-top:6px !important;}
+.ct-gross td{font-weight:700;color:var(--text);}
+.ct-gross td:last-child{color:var(--text);}
+.ct-ben td{color:var(--green);}
+.cost-eff{margin-top:10px;background:var(--accent-light);border-radius:7px;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;}
+.ce-label{font-size:13px;font-weight:700;color:var(--accent);}
+.ce-sub{font-size:10px;color:var(--accent);opacity:.7;margin-top:1px;}
+.ce-amt{font-size:17px;font-weight:800;color:var(--accent);}
+.ce-night{font-size:11px;color:var(--accent);opacity:.7;text-align:right;}
+.links-section{padding:12px 18px;display:flex;flex-wrap:wrap;gap:7px;}
+.lbtn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid;display:inline-flex;align-items:center;gap:4px;}
+.lb-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.lb-primary:hover{background:#133a2c;}
+.lb-sec{background:#fff;color:var(--text);border-color:var(--border);}
+.lb-rev{background:#fff;color:var(--blue);border-color:var(--blue-light);}
+.summary-section{padding:24px 32px 0;}
+.summary-section h2{font-size:15px;font-weight:600;margin-bottom:14px;}
+.sum-table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:1px solid var(--border);font-size:13px;}
+.sum-table th{background:var(--accent);color:#fff;padding:9px 13px;text-align:left;font-weight:500;font-size:11px;}
+.sum-table td{padding:9px 13px;border-bottom:1px solid var(--border);}
+.sum-table tr:last-child td{border-bottom:none;}
+.sum-table tr:hover td{background:var(--bg);}
+.rn{font-weight:700;color:var(--accent);}
+.disclaimer{padding:16px 32px 32px;font-size:11px;color:var(--muted);line-height:1.7;}
+@media(max-width:700px){
+  .cards-grid,.top3-grid{grid-template-columns:1fr;}
+  .site-header,.filter-bar,.scoring-panel,.summary-section,.disclaimer,.top3-section,.intake-body{padding-left:16px;padding-right:16px;}
+  .form-grid{grid-template-columns:1fr;}
+  .sliders-grid{grid-template-columns:repeat(2,1fr);}
+  .cal-grid{grid-template-columns:1fr;}
+  .cal-popup{min-width:unset;width:calc(100vw - 40px);}
+}
+
+
+/* ---- Extra v3 styles ---- */
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:#0d1117; color:#e6edf3; }
+#site-header { text-align:center; padding:2rem 1rem 1rem; }
+.site-title { font-size:1.8rem; font-weight:700; color:#58a6ff; }
+.site-subtitle { font-size:.9rem; color:#8b949e; margin-top:.25rem; }
+#intake-section { max-width:900px; margin:1.5rem auto; background:#161b22; border:1px solid #30363d; border-radius:12px; overflow:visible; }
+.intake-header { padding:1rem 1.5rem; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-weight:600; font-size:1.05rem; color:#e6edf3; }
+.intake-header:hover { background:#1c2128; }
+.intake-caret { font-size:.8rem; color:#8b949e; }
+.intake-body { padding:1.5rem; border-top:1px solid #30363d; }
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+.form-field { display:flex; flex-direction:column; gap:.5rem; }
+.form-field.full-width { grid-column:1/-1; }
+.field-label { font-size:.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#8b949e; }
+.field-hint { font-weight:400; text-transform:none; letter-spacing:0; color:#6e7681; }
+.dest-wrap { position:relative; }
+.dest-input { width:100%; padding:.6rem .9rem; background:#0d1117; border:1px solid #30363d; border-radius:8px; color:#e6edf3; font-size:.95rem; box-sizing:border-box; }
+.dest-input:focus { outline:none; border-color:#58a6ff; box-shadow:0 0 0 3px rgba(88,166,255,.15); }
+.dest-dropdown { position:absolute; top:100%; left:0; right:0; background:#1c2128; border:1px solid #30363d; border-radius:8px; z-index:100; max-height:240px; overflow-y:auto; margin-top:4px; }
+.dest-item { padding:.6rem .9rem; cursor:pointer; display:flex; align-items:center; gap:.5rem; font-size:.9rem; }
+.dest-item:hover { background:#30363d; }
+.dest-icon { font-size:.85rem; }
+.date-range-wrap { position:relative; }
+.date-display { padding:.6rem .9rem; background:#0d1117; border:1px solid #30363d; border-radius:8px; cursor:pointer; font-size:.9rem; color:#6e7681; }
+.date-display.has-value { color:#e6edf3; }
+.date-display:hover { border-color:#58a6ff; }
+.cal-popup { position:absolute; top:100%; left:0; z-index:200; background:#1c2128; border:1px solid #30363d; border-radius:12px; padding:1rem; margin-top:6px; box-shadow:0 8px 32px rgba(0,0,0,.4); min-width:560px; }
+.cal-nav { display:flex; align-items:flex-start; gap:1rem; }
+.cal-nav-btn { background:none; border:1px solid #30363d; color:#e6edf3; border-radius:6px; padding:.3rem .6rem; cursor:pointer; font-size:1.1rem; flex-shrink:0; }
+.cal-nav-btn:hover { background:#30363d; }
+.cal-two-months { display:flex; gap:1.5rem; flex:1; }
+.cal-month-label { text-align:center; font-size:.85rem; font-weight:600; color:#8b949e; margin-bottom:.5rem; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.cal-header { text-align:center; font-size:.7rem; color:#6e7681; padding:.2rem; }
+.cal-day { text-align:center; padding:.3rem .2rem; cursor:pointer; border-radius:4px; font-size:.82rem; color:#e6edf3; }
+.cal-day:hover:not(.disabled):not(.empty) { background:#30363d; }
+.cal-day.disabled { color:#30363d; cursor:not-allowed; }
+.cal-day.empty { }
+.cal-day.selected-start,.cal-day.selected-end { background:#1f6feb; color:#fff; font-weight:700; }
+.cal-day.in-range { background:rgba(31,111,235,.25); }
+.cal-footer { display:flex; align-items:center; gap:1rem; padding-top:.75rem; font-size:.85rem; color:#8b949e; }
+.cal-clear-btn { background:none; border:1px solid #30363d; color:#e6edf3; border-radius:6px; padding:.2rem .5rem; cursor:pointer; font-size:.8rem; margin-left:auto; }
+.cal-done-btn { background:#2e7d32; color:#fff; border:none; border-radius:4px; padding:4px 14px; cursor:pointer; font-size:12px; font-weight:600; margin-left:6px; }
+.cal-done-btn:hover { background:#1b5e20; }
+.cal-done-hint { font-size:12px; color:#2e7d32; font-weight:600; margin-right:8px; }
+.travelers-row { display:flex; gap:2rem; }
+.traveler-group { display:flex; align-items:center; gap:.75rem; }
+.traveler-label { font-size:.85rem; color:#8b949e; min-width:50px; }
+.counter { display:flex; align-items:center; gap:.5rem; }
+.counter-btn { background:#21262d; border:1px solid #30363d; color:#e6edf3; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:1rem; display:flex; align-items:center; justify-content:center; }
+.counter-btn:hover { background:#30363d; }
+.counter-val { min-width:20px; text-align:center; font-weight:600; }
+.chips-wrap { display:flex; flex-wrap:wrap; gap:.4rem; }
+.chip { padding:.3rem .75rem; border-radius:20px; border:1px solid #30363d; background:#0d1117; color:#8b949e; cursor:pointer; font-size:.82rem; transition:all .15s; user-select:none; }
+.chip:hover { border-color:#58a6ff; color:#e6edf3; }
+.chip.active { border-color:#58a6ff; background:rgba(88,166,255,.15); color:#58a6ff; font-weight:600; }
+.chip.amex.active { border-color:#b8860b; background:rgba(184,134,11,.15); color:#f0c040; }
+.chip.chase.active { border-color:#1a5276; background:rgba(26,82,118,.2); color:#5dade2; }
+.chip.hyatt.active { border-color:#154360; background:rgba(21,67,96,.2); color:#5dade2; }
+.chip.marriott.active { border-color:#7b241c; background:rgba(123,36,28,.2); color:#e74c3c; }
+.chip.hilton.active { border-color:#1a6b3c; background:rgba(26,107,60,.2); color:#2ecc71; }
+.chip.ihg.active { border-color:#4a235a; background:rgba(74,35,90,.2); color:#9b59b6; }
+.chip.virtuoso.active { border-color:#6d4c0a; background:rgba(109,76,10,.2); color:#f39c12; }
+.seg-buttons { display:flex; gap:.3rem; flex-wrap:wrap; }
+.seg-btn { padding:.35rem .75rem; background:#0d1117; border:1px solid #30363d; color:#8b949e; border-radius:6px; cursor:pointer; font-size:.82rem; }
+.seg-btn:hover { border-color:#58a6ff; color:#e6edf3; }
+.seg-btn.active { background:rgba(88,166,255,.15); border-color:#58a6ff; color:#58a6ff; font-weight:600; }
+.custom-nonneg-row { display:flex; gap:.5rem; margin-top:.5rem; }
+.custom-inp { flex:1; padding:.4rem .75rem; background:#0d1117; border:1px solid #30363d; border-radius:6px; color:#e6edf3; font-size:.85rem; }
+.custom-inp:focus { outline:none; border-color:#58a6ff; }
+.add-btn { padding:.4rem .75rem; background:#1f6feb; border:none; color:#fff; border-radius:6px; cursor:pointer; font-size:.82rem; }
+.add-btn:hover { background:#388bfd; }
+.form-actions { margin-top:1.5rem; display:flex; align-items:center; gap:1rem; }
+.submit-btn { padding:.7rem 2rem; background:linear-gradient(135deg,#1f6feb,#388bfd); border:none; color:#fff; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; }
+.submit-btn:hover { background:linear-gradient(135deg,#388bfd,#58a6ff); transform:translateY(-1px); }
+.output-note { font-size:.8rem; color:#6e7681; }
+#output-actions { max-width:900px; margin:.75rem auto; display:flex; gap:.75rem; padding:0 1rem; }
+.action-btn { padding:.6rem 1.5rem; border-radius:8px; border:none; cursor:pointer; font-weight:600; font-size:.9rem; }
+.action-btn.primary { background:linear-gradient(135deg,#1f6feb,#388bfd); color:#fff; }
+.action-btn.secondary { background:#21262d; border:1px solid #30363d; color:#e6edf3; }
+.action-btn:hover { opacity:.9; transform:translateY(-1px); }
+#scoring-panel { max-width:900px; margin:.5rem auto; background:#161b22; border:1px solid #30363d; border-radius:10px; padding:1rem 1.5rem; display:none; }
+.scoring-title { font-weight:600; margin-bottom:.75rem; color:#8b949e; font-size:.85rem; text-transform:uppercase; letter-spacing:.05em; }
+.sliders-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:.5rem 1.5rem; }
+.slider-row { display:flex; align-items:center; gap:.5rem; font-size:.82rem; color:#8b949e; }
+.slider-row label { min-width:60px; }
+.slider-row input[type=range] { flex:1; accent-color:#58a6ff; }
+.w-val { min-width:30px; text-align:right; color:#58a6ff; font-weight:600; }
+#dashboard-section { max-width:1200px; margin:0 auto; padding:0 1rem 3rem; }
+#top3-section { margin:1.5rem 0; }
+.section-title { font-size:1.1rem; font-weight:700; color:#e6edf3; margin-bottom:1rem; }
+.top3-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.top3-card { background:#161b22; border:1px solid #30363d; border-radius:10px; overflow:hidden; }
+.top3-header { height:150px; display:flex; align-items:flex-end; justify-content:space-between; padding:0 1rem 10px; position:relative; }
+.top3-medal { font-size:1.5rem; }
+.top3-score { font-size:1.8rem; font-weight:800; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.5); }
+.top3-body { padding:.75rem 1rem; }
+.top3-name { font-weight:700; font-size:.9rem; color:#e6edf3; margin-bottom:.2rem; }
+.top3-location { font-size:.78rem; color:#6e7681; margin-bottom:.3rem; }
+.top3-cost { font-weight:700; color:#58a6ff; font-size:.85rem; margin-bottom:.3rem; }
+.top3-highlight { font-size:.78rem; color:#8b949e; font-style:italic; }
+#filter-bar { display:flex; align-items:center; flex-wrap:wrap; gap:.5rem 1rem; padding:.75rem 0; border-bottom:1px solid #30363d; margin-bottom:1.25rem; }
+.filter-group { display:flex; align-items:center; gap:.3rem; }
+.filter-label { font-size:.78rem; color:#6e7681; margin-right:.2rem; }
+.sort-btn,.mode-btn,.view-btn { padding:.3rem .65rem; background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:6px; cursor:pointer; font-size:.78rem; }
+.sort-btn.active,.mode-btn.active,.view-btn.active { background:rgba(88,166,255,.15); border-color:#58a6ff; color:#58a6ff; font-weight:600; }
+.weights-toggle-btn { padding:.3rem .65rem; background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:6px; cursor:pointer; font-size:.78rem; }
+.weights-toggle-btn:hover { border-color:#58a6ff; color:#e6edf3; }
+.cards-grid.grid-view { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; }
+.cards-grid.list-view { display:flex; flex-direction:column; gap:.75rem; }
+.prop-card { background:#161b22; border:1px solid #30363d; border-radius:12px; overflow:hidden; transition:transform .2s,box-shadow .2s; }
+.prop-card:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+.card-photo-wrap { position:relative; height:180px; overflow:hidden; }
+.card-photo { width:100%; height:100%; object-fit:cover; }
+.card-photo-placeholder { height:100%; display:flex; align-items:center; justify-content:center; }
+.gallery-link { color:rgba(255,255,255,.8); font-size:.82rem; font-weight:600; border:1px solid rgba(255,255,255,.4); padding:.3rem .75rem; border-radius:6px; text-decoration:none; }
+.gallery-link:hover { background:rgba(255,255,255,.1); color:#fff; }
+.rental-meta { display:flex; gap:6px; flex-wrap:wrap; padding:6px 14px 2px; }
+.rental-meta span { font-size:11px; background:rgba(39,174,96,.12); border:1px solid rgba(39,174,96,.3); border-radius:10px; padding:2px 7px; color:#58d68d; font-weight:500; }
+.card-badges { position:absolute; top:.6rem; left:.6rem; display:flex; flex-wrap:wrap; gap:.3rem; }
+.card-score-overlay { position:absolute; top:.6rem; right:.6rem; background:rgba(0,0,0,.7); color:#fff; font-weight:800; font-size:1.3rem; padding:.2rem .5rem; border-radius:8px; backdrop-filter:blur(4px); }
+.tier-badge { font-size:.68rem; font-weight:700; padding:.2rem .5rem; border-radius:10px; background:rgba(0,0,0,.6); color:#f0c040; border:1px solid rgba(240,192,64,.3); backdrop-filter:blur(4px); }
+.type-badge { font-size:.68rem; font-weight:600; padding:.2rem .5rem; border-radius:10px; background:rgba(0,0,0,.6); color:#e6edf3; border:1px solid rgba(255,255,255,.2); backdrop-filter:blur(4px); }
+.type-badge.type-hotel { background:rgba(41,128,185,.75); border-color:rgba(41,128,185,.5); }
+.type-badge.type-rental { background:rgba(39,174,96,.75); border-color:rgba(39,174,96,.5); }
+.ai-badge { font-size:.68rem; font-weight:700; padding:.2rem .5rem; border-radius:10px; background:rgba(46,204,113,.2); color:#2ecc71; border:1px solid rgba(46,204,113,.3); }
+.card-body { padding:1rem; }
+.card-name { font-size:.95rem; font-weight:700; color:#e6edf3; margin:0 0 .3rem; }
+.card-location { font-size:.78rem; color:#6e7681; margin-bottom:.4rem; }
+.card-program { margin-bottom:.5rem; display:inline-block; }
+.sm-chip { padding:.2rem .55rem; font-size:.72rem; }
+.scores-grid { display:flex; flex-direction:column; gap:.25rem; margin:.5rem 0; }
+.score-item { display:flex; align-items:center; gap:.4rem; }
+.score-label { font-size:.72rem; color:#6e7681; min-width:52px; }
+.score-bar-wrap { flex:1; background:#21262d; border-radius:4px; height:6px; overflow:hidden; }
+.score-bar { height:100%; border-radius:4px; transition:width .3s; }
+.score-num { font-size:.72rem; font-weight:700; color:#e6edf3; min-width:16px; text-align:right; }
+.amenities-row { display:flex; flex-wrap:wrap; gap:.25rem; margin:.5rem 0; }
+.amenity-icon { font-size:.95rem; }
+.cost-section { background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:.65rem .75rem; margin:.6rem 0; font-size:.8rem; }
+.cost-room-select { display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem; flex-wrap:wrap; }
+.cost-room-select label { color:#6e7681; font-size:.75rem; }
+.cost-room-select select { background:#161b22; border:1px solid #30363d; color:#e6edf3; border-radius:5px; padding:.2rem .4rem; font-size:.78rem; flex:1; min-width:0; }
+.room-detail { font-size:.72rem; color:#6e7681; }
+.cost-rows { display:flex; flex-direction:column; gap:.15rem; }
+.cost-row { display:flex; justify-content:space-between; font-size:.78rem; color:#8b949e; }
+.cost-row.gross { color:#e6edf3; border-top:1px solid #21262d; padding-top:.2rem; margin-top:.1rem; font-weight:600; }
+.cost-row.benefit span.benefit-val { color:#2ecc71; }
+.cost-row.benefit { color:#2ecc71; }
+.cost-row.effective { font-weight:700; color:#58a6ff; border-top:1px solid #21262d; padding-top:.2rem; margin-top:.1rem; }
+.cost-row.nightly { font-size:.82rem; font-weight:700; color:#f0c040; }
+.review-section { margin-top:.5rem; }
+.review-item { font-size:.75rem; padding:.15rem 0; color:#8b949e; }
+.review-item.pos { color:#8b949e; }
+.review-item.con { color:#8b949e; }
+.family-signal { font-size:.75rem; color:#8b949e; margin-top:.2rem; padding-top:.3rem; border-top:1px solid #21262d; }
+#summary-section { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.75rem 1.25rem; margin-top:1.5rem; }
+.summary-bar { display:flex; flex-wrap:wrap; gap:.75rem 2rem; }
+.summary-item { display:flex; flex-direction:column; }
+.summary-label { font-size:.7rem; color:#6e7681; text-transform:uppercase; letter-spacing:.05em; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; display:flex; align-items:center; justify-content:center; padding:1rem; backdrop-filter:blur(4px); }
+.modal-box { background:#161b22; border:1px solid #30363d; border-radius:14px; width:100%; max-width:720px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; padding:.75rem 1rem; border-bottom:1px solid #30363d; }
+.modal-tabs { display:flex; gap:.3rem; }
+.modal-tab { padding:.4rem .9rem; background:none; border:1px solid #30363d; color:#8b949e; border-radius:6px; cursor:pointer; font-size:.85rem; }
+.modal-tab.active { background:rgba(88,166,255,.15); border-color:#58a6ff; color:#58a6ff; font-weight:600; }
+.modal-close { background:none; border:none; color:#6e7681; font-size:1.1rem; cursor:pointer; padding:.2rem .5rem; }
+.modal-close:hover { color:#e6edf3; }
+.modal-pane { display:flex; flex-direction:column; overflow:hidden; }
+.modal-pane-header { display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; flex-wrap:wrap; }
+.modal-desc { font-size:.82rem; color:#8b949e; flex:1; margin:0; }
+.copy-btn { padding:.35rem .8rem; background:#21262d; border:1px solid #30363d; color:#e6edf3; border-radius:6px; cursor:pointer; font-size:.8rem; }
+.copy-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+.copy-btn.copied { border-color:#2ecc71; color:#2ecc71; }
+.copy-btn.secondary { background:linear-gradient(135deg,#1f6feb,#388bfd); border:none; color:#fff; }
+.prompt-box { margin:0; padding:1rem; overflow-y:auto; background:#0d1117; font-size:.78rem; color:#8b949e; font-family:'SFMono-Regular',Consolas,monospace; line-height:1.6; white-space:pre-wrap; word-break:break-word; flex:1; min-height:200px; max-height:55vh; }
+@media(max-width:640px){
+  .form-grid{grid-template-columns:1fr;}
+  .top3-grid{grid-template-columns:1fr;}
+  .cal-popup{min-width:unset;width:calc(100vw - 2rem);}
+  .cal-two-months{flex-direction:column;}
+  .cards-grid.grid-view{grid-template-columns:1fr;}
+}
+
+
+/* ---- Help Modal ---- */
+.site-header-inner { display:flex; align-items:flex-start; justify-content:space-between; max-width:900px; margin:0 auto; }
+.help-btn { padding:.35rem .85rem; background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:20px; cursor:pointer; font-size:.8rem; font-weight:600; flex-shrink:0; margin-top:.25rem; }
+.help-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+.help-modal-box { max-width:660px; }
+.help-pane { }
+.help-title { font-size:1rem; font-weight:700; color:#e6edf3; margin:0 0 .75rem; }
+.help-body { font-size:.85rem; color:#8b949e; line-height:1.6; margin:0 0 .75rem; }
+.help-steps { display:flex; flex-direction:column; gap:.85rem; margin-bottom:1rem; }
+.help-step { display:flex; gap:.85rem; align-items:flex-start; }
+.step-num { width:26px; height:26px; background:#1f6feb; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; flex-shrink:0; margin-top:.1rem; }
+.step-content { flex:1; }
+.step-content strong { display:block; color:#e6edf3; font-size:.88rem; margin-bottom:.2rem; }
+.step-content p { font-size:.82rem; color:#8b949e; margin:0; line-height:1.55; }
+.help-tip { display:flex; gap:.6rem; background:#161b22; border:1px solid #30363d; border-radius:8px; padding:.65rem .85rem; font-size:.8rem; color:#8b949e; line-height:1.5; }
+.tip-icon { flex-shrink:0; font-size:1rem; }
+.help-link { color:#58a6ff; text-decoration:none; }
+.help-link:hover { text-decoration:underline; }
+.score-explainers { display:flex; flex-direction:column; gap:.5rem; margin-bottom:.5rem; }
+.score-exp-row { display:flex; gap:.75rem; font-size:.82rem; }
+.score-exp-label { min-width:160px; color:#e6edf3; font-weight:600; flex-shrink:0; }
+.score-exp-desc { color:#8b949e; line-height:1.5; }
+.cost-formula { background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:.85rem 1rem; font-size:.82rem; display:flex; flex-direction:column; gap:.3rem; }
+.formula-row { display:flex; justify-content:space-between; color:#8b949e; }
+.formula-row.divider { border-top:1px solid #21262d; padding-top:.3rem; margin-top:.1rem; color:#e6edf3; font-weight:700; }
+.formula-row.benefit-row { color:#2ecc71; }
+.formula-eq { color:#6e7681; }
+.formula-eq.green { color:#2ecc71; }
+.formula-eq.highlight { color:#f0c040; font-weight:700; }
+.share-paths { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.5rem; }
+.share-path { background:#0d1117; border:1px solid #21262d; border-radius:8px; padding:.85rem; }
+.share-path-title { font-weight:700; color:#e6edf3; font-size:.88rem; margin-bottom:.2rem; }
+.share-path-who { font-size:.72rem; color:#58a6ff; margin-bottom:.4rem; }
+.share-path-desc { font-size:.78rem; color:#8b949e; line-height:1.5; }
+@media(max-width:540px){
+  .share-paths{grid-template-columns:1fr;}
+  .score-exp-label{min-width:120px;}
+  .modal-tabs{flex-wrap:wrap;gap:.25rem;}
+}
+
+
+/* ---- Site header fix: centered title, absolute help btn ---- */
+.site-header-inner { display:none; } /* kill old wrapper if still present */
+#site-header { position:relative; text-align:center; padding:2rem 1rem 1.25rem; }
+.help-btn { position:absolute; top:1.25rem; right:1.25rem; padding:.35rem .85rem;
+  background:#21262d; border:1px solid #30363d; color:#8b949e; border-radius:20px;
+  cursor:pointer; font-size:.8rem; font-weight:600; }
+.help-btn:hover { border-color:#58a6ff; color:#58a6ff; }
+
+/* ---- Top3 card — name overlaid on gradient ---- */
+.top3-card { position:relative; background:#161b22; border:1px solid #30363d;
+  border-radius:12px; overflow:hidden; }
+.top3-header { position:relative; height:120px; overflow:hidden; }
+.top3-medal { position:absolute; top:.6rem; left:.7rem; font-size:1.4rem; z-index:3; }
+.top3-score-badge { position:absolute; top:.6rem; right:.7rem; background:rgba(0,0,0,.65);
+  color:#fff; font-weight:800; font-size:1.5rem; padding:.15rem .5rem; border-radius:8px;
+  backdrop-filter:blur(4px); z-index:3; }
+.top3-name-overlay { position:absolute; bottom:0; left:0; right:0; z-index:3;
+  background:linear-gradient(transparent, rgba(0,0,0,.80));
+  color:#fff; font-size:.88rem; font-weight:700; line-height:1.3;
+  padding:.5rem .8rem .55rem; }
+.top3-body { padding:.7rem .85rem .85rem; }
+.top3-location { font-size:.75rem; color:#6e7681; margin-bottom:.3rem; }
+.top3-cost { font-weight:700; color:#58a6ff; font-size:.88rem; margin-bottom:.3rem; }
+.top3-highlight { font-size:.75rem; color:#8b949e; font-style:italic; line-height:1.4; }
+
+/* ---- Table view ---- */
+.cards-grid.table-view { display:block; }
+.tbl-scroll { overflow-x:auto; border-radius:10px; border:1px solid #30363d; }
+.prop-table { width:100%; border-collapse:collapse; font-size:.8rem; }
+.prop-table thead tr { background:#1c2128; }
+.prop-table th { padding:.6rem .85rem; text-align:left; color:#6e7681; font-size:.72rem;
+  text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid #30363d;
+  white-space:nowrap; }
+.tbl-row { border-bottom:1px solid #21262d; transition:background .15s; }
+.tbl-row:hover { background:#1c2128; }
+.tbl-row:last-child { border-bottom:none; }
+.prop-table td { padding:.6rem .85rem; vertical-align:middle; }
+.tbl-rank { font-size:1.1rem; text-align:center; width:36px; }
+.tbl-prop-name { font-weight:700; color:#e6edf3; font-size:.82rem; margin-bottom:.15rem; }
+.tbl-prop-sub { font-size:.72rem; color:#6e7681; }
+.tbl-score-num { font-size:1.1rem; font-weight:800; color:#58a6ff; }
+.tbl-room-name { color:#e6edf3; font-size:.8rem; margin-bottom:.1rem; }
+.tbl-room-sub { font-size:.7rem; color:#6e7681; }
+.tbl-eff-val { font-size:.95rem; color:#f0c040; }
+.tbl-eff-label { font-size:.7rem; color:#6e7681; }
+.tbl-gross { color:#8b949e; }
+.tbl-check { color:#2ecc71; font-weight:700; font-size:.9rem; }
+.tbl-miss { color:#e74c3c; font-weight:700; font-size:.9rem; }
+
+</style>
+</head>
+<body>
+
+<div id="site-header">
+  <div class="site-title">🧳 Lodging Evaluator</div>
+  <div class="site-subtitle">Structured travel intelligence · Powered by real criteria</div>
+  <button class="help-btn" onclick="showHelp()" title="How to use this tool">? Help</button>
+</div>
+
+<div id="intake-section">
+  <div class="intake-header" onclick="toggleIntake()">
+    <span id="intake-toggle">🔍 Plan Your Trip</span>
+    <span class="intake-caret">▼</span>
+  </div>
+  <div class="intake-body" id="intake-body">
+    <div class="form-grid">
+
+      <!-- Destination -->
+      <div class="form-field full-width">
+        <label class="field-label">📍 Destination</label>
+        <div class="dest-wrap">
+          <input type="text" id="dest-input" class="dest-input" placeholder="Search destinations (e.g. Maui, Bali, Paris...)" autocomplete="off">
+          <div class="dest-dropdown" id="dest-dropdown" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="form-field full-width">
+        <label class="field-label">📅 Travel Dates</label>
+        <div class="date-range-wrap">
+          <div class="date-display" id="date-display" onclick="toggleCalendar()">Select travel dates</div>
+          <div class="cal-popup" id="cal-popup" style="display:none"></div>
+        </div>
+      </div>
+
+      <!-- Travelers -->
+      <div class="form-field">
+        <label class="field-label">👥 Travelers</label>
+        <div class="travelers-row">
+          <div class="traveler-group">
+            <span class="traveler-label">Adults</span>
+            <div class="counter">
+              <button onclick="changeCount('adults',-1)" class="counter-btn">−</button>
+              <span id="adults-count" class="counter-val">2</span>
+              <button onclick="changeCount('adults',1)" class="counter-btn">+</button>
+            </div>
+          </div>
+          <div class="traveler-group">
+            <span class="traveler-label">Children</span>
+            <div class="counter">
+              <button onclick="changeCount('children',-1)" class="counter-btn">−</button>
+              <span id="children-count" class="counter-val">1</span>
+              <button onclick="changeCount('children',1)" class="counter-btn">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Budget Tier -->
+      <div class="form-field">
+        <label class="field-label">💰 Budget Tier</label>
+        <div class="seg-buttons seg-budget">
+          <button class="seg-btn" data-val="budget" onclick="selectSegment('budget','budget')">Budget</button>
+          <button class="seg-btn" data-val="midscale" onclick="selectSegment('budget','midscale')">Midscale</button>
+          <button class="seg-btn" data-val="upscale" onclick="selectSegment('budget','upscale')">Upscale</button>
+          <button class="seg-btn active" data-val="luxury" onclick="selectSegment('budget','luxury')">Luxury</button>
+          <button class="seg-btn" data-val="ultra" onclick="selectSegment('budget','ultra')">Ultra-Luxury</button>
+        </div>
+      </div>
+
+      <!-- Non-Negotiables -->
+      <div class="form-field full-width">
+        <label class="field-label">🚫 Non-Negotiables <span class="field-hint">Must-haves — tap to select</span></label>
+        <div class="chips-wrap" id="nonneg-chips">
+          <span class="chip active" id="chip-nonneg-pool" onclick="toggleChip('pool','nonneg')">🏊 Pool</span>
+          <span class="chip" id="chip-nonneg-beach" onclick="toggleChip('beach','nonneg')">🏖️ Beach Access</span>
+          <span class="chip" id="chip-nonneg-spa" onclick="toggleChip('spa','nonneg')">💆 Spa</span>
+          <span class="chip" id="chip-nonneg-gym" onclick="toggleChip('gym','nonneg')">🏋️ Fitness Center</span>
+          <span class="chip" id="chip-nonneg-restaurant" onclick="toggleChip('restaurant','nonneg')">🍽️ Restaurant</span>
+          <span class="chip" id="chip-nonneg-kids_club" onclick="toggleChip('kids_club','nonneg')">👶 Kids' Club</span>
+          <span class="chip" id="chip-nonneg-water_sports" onclick="toggleChip('water_sports','nonneg')">🤿 Water Sports</span>
+          <span class="chip" id="chip-nonneg-golf" onclick="toggleChip('golf','nonneg')">⛳ Golf</span>
+          <span class="chip" id="chip-nonneg-tennis" onclick="toggleChip('tennis','nonneg')">🎾 Tennis</span>
+          <span class="chip" id="chip-nonneg-pet_friendly" onclick="toggleChip('pet_friendly','nonneg')">🐾 Pet Friendly</span>
+          <span class="chip" id="chip-nonneg-adults_only" onclick="toggleChip('adults_only','nonneg')">🔞 Adults Only</span>
+        </div>
+        <div class="custom-nonneg-row">
+          <input type="text" id="custom-nonneg-input" class="custom-inp" placeholder="Add custom requirement...">
+          <button onclick="addCustomNonNeg()" class="add-btn">+ Add</button>
+        </div>
+        <div class="chips-wrap" id="custom-chips-wrap"></div>
+      </div>
+
+      <!-- Reward Programs -->
+      <div class="form-field full-width">
+        <label class="field-label">💳 Reward Programs &amp; Cards</label>
+        <div class="chips-wrap">
+          <span class="chip amex active" id="chip-prog-amex_fhr" onclick="toggleChip('amex_fhr','program')">Amex FHR</span>
+          <span class="chip chase active" id="chip-prog-chase_edit" onclick="toggleChip('chase_edit','program')">Chase The Edit</span>
+          <span class="chip hyatt active" id="chip-prog-hyatt" onclick="toggleChip('hyatt','program')">World of Hyatt</span>
+          <span class="chip marriott active" id="chip-prog-marriott" onclick="toggleChip('marriott','program')">Marriott Bonvoy</span>
+          <span class="chip hilton" id="chip-prog-hilton" onclick="toggleChip('hilton','program')">Hilton Honors</span>
+          <span class="chip ihg" id="chip-prog-ike" onclick="toggleChip('ike','program')">IHG One Rewards</span>
+          <span class="chip virtuoso" id="chip-prog-virtuoso" onclick="toggleChip('virtuoso','program')">Virtuoso</span>
+        </div>
+      </div>
+
+      <!-- Lodging Type -->
+      <div class="form-field full-width">
+        <label class="field-label">🏨 Lodging Type <span class="field-hint">Leave blank for all</span></label>
+        <div class="chips-wrap">
+          <span class="chip" id="chip-lodging-resort" onclick="toggleChip('resort','lodging')">🏨 Resort</span>
+          <span class="chip" id="chip-lodging-boutique" onclick="toggleChip('boutique','lodging')">🏡 Boutique Hotel</span>
+          <span class="chip" id="chip-lodging-villa" onclick="toggleChip('villa','lodging')">🏖️ Villa</span>
+          <span class="chip" id="chip-lodging-rental" onclick="toggleChip('rental','lodging')">🏠 Vacation Rental</span>
+          <span class="chip" id="chip-lodging-all_inclusive" onclick="toggleChip('all_inclusive','lodging')">🍹 All-Inclusive</span>
+        </div>
+      </div>
+
+    </div><!-- /form-grid -->
+
+    <div class="form-actions">
+      <button class="submit-btn" onclick="submitIntakeForm()">Generate Research →</button>
+      <div class="output-note">Generates a structured brief for Claude research</div>
+    </div>
+
+  </div><!-- /intake-body -->
+</div><!-- /intake-section -->
+
+<!-- Output Actions (hidden until submit) -->
+<div id="output-actions" style="display:none">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+    <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Research:</span>
+    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-hotels" checked onchange="updateResearchTypes()"> Hotels</label>
+    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-rentals" checked onchange="updateResearchTypes()"> Curated Rentals <span style="font-size:11px;color:var(--muted)">(Plum Guide, onefinestay)</span></label>
+  </div>
+  <button class="action-btn primary" onclick="showModal('cowork')">⚡ Cowork Brief</button>
+  <button class="action-btn secondary" onclick="showModal('claude')">🤖 Claude.ai Prompt</button>
+</div>
+
+<!-- Scoring Panel -->
+<div id="scoring-panel" style="display:none">
+  <div class="scoring-title">⚖️ Adjust Scoring Weights</div>
+  <div class="sliders-grid">
+    <div class="slider-row"><label>Location</label><input type="range" id="w-location" min="0" max="100" value="20" oninput="refreshWeights('location')"><span id="wv-location" class="w-val">20%</span></div>
+    <div class="slider-row"><label>Design</label><input type="range" id="w-design" min="0" max="100" value="20" oninput="refreshWeights('design')"><span id="wv-design" class="w-val">20%</span></div>
+    <div class="slider-row"><label>Service</label><input type="range" id="w-service" min="0" max="100" value="30" oninput="refreshWeights('service')"><span id="wv-service" class="w-val">30%</span></div>
+    <div class="slider-row"><label>Family</label><input type="range" id="w-family" min="0" max="100" value="15" oninput="refreshWeights('family')"><span id="wv-family" class="w-val">15%</span></div>
+    <div class="slider-row"><label>Reviews</label><input type="range" id="w-review" min="0" max="100" value="15" oninput="refreshWeights('review')"><span id="wv-review" class="w-val">15%</span></div>
+  </div>
+</div>
+
+<!-- Dashboard (hidden until submit) -->
+<div id="dashboard-section" style="display:none">
+
+  <div id="top3-section"></div>
+
+  <!-- Filter Bar -->
+  <div id="filter-bar">
+    <div class="filter-group trip-selector-group">
+      <span class="filter-label">Trip:</span>
+      <select id="trip-selector" onchange="switchTrip(this.value)" style="background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer;"></select>
+      <button class="sort-btn" onclick="showImportExport()" title="Import or export trip data">⬆⬇ Trips</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Sort:</span>
+      <button class="sort-btn active" data-sort="composite" onclick="applySort('composite')">Score</button>
+      <button class="sort-btn" data-sort="effective" onclick="applySort('effective')">Effective Cost</button>
+      <button class="sort-btn" data-sort="gross" onclick="applySort('gross')">Gross Cost</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Type:</span>
+      <button class="mode-btn active" data-mode="all" onclick="applyTripMode('all')">All</button>
+      <button class="mode-btn" data-mode="hotels" onclick="applyTripMode('hotels')">Hotels</button>
+      <button class="mode-btn" data-mode="rentals" onclick="applyTripMode('rentals')">Rentals</button>
+    </div>
+    <div class="filter-group">
+      <button class="view-btn active" data-view="grid" onclick="applyView('grid')">▦ Grid</button>
+      <button class="view-btn" data-view="list" onclick="applyView('list')">☰ List</button>
+      <button class="view-btn" data-view="table" onclick="applyView('table')">📊 Table</button>
+    </div>
+    <div class="filter-group">
+      <button class="weights-toggle-btn" onclick="toggleWeightsPanel()">⚖️ Weights</button>
+    </div>
+  </div>
+
+  <div id="cards-grid" class="cards-grid grid-view"></div>
+
+  <div id="summary-section"></div>
+
+</div><!-- /dashboard-section -->
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-tab="cowork" onclick="switchTab('cowork')">⚡ Cowork Mode</button>
+        <button class="modal-tab" data-tab="claude" onclick="switchTab('claude')">🤖 Claude.ai Mode</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="cowork-pane" class="modal-pane">
+      <div class="modal-pane-header">
+        <p class="modal-desc">Copy this brief and paste it directly into Cowork. Claude will research and score properties using your exact criteria.</p>
+        <button class="copy-btn" onclick="copyPrompt('cowork-prompt-box')">📋 Copy Brief</button>
+      </div>
+      <pre class="prompt-box" id="cowork-prompt-box"></pre>
+    </div>
+    <div id="claude-pane" class="modal-pane" style="display:none">
+      <div class="modal-pane-header">
+        <p class="modal-desc">Share this with friends — they paste it into their own Claude.ai. The full methodology is embedded so results match your standard.</p>
+        <button class="copy-btn" onclick="copyPrompt('claude-prompt-box')">📋 Copy Prompt</button>
+        <button class="copy-btn secondary" onclick="openClaudeAI()">↗ Open Claude.ai</button>
+      </div>
+      <pre class="prompt-box" id="claude-prompt-box"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DESTINATIONS
+// ============================================================
+const DESTINATIONS = [
+  // Caribbean & Atlantic
+  "Anguilla, Caribbean","Antigua, Caribbean","Aruba, Caribbean","Bahamas, Caribbean",
+  "Barbados, Caribbean","Bermuda, Atlantic","Bonaire, Caribbean","Cayman Islands, Caribbean",
+  "Curacao, Caribbean","Dominican Republic, Caribbean","Grenada, Caribbean",
+  "Jamaica, Caribbean","Martinique, Caribbean","Puerto Rico, Caribbean",
+  "St. Barths, Caribbean","St. Lucia, Caribbean","St. Maarten, Caribbean",
+  "Turks & Caicos, Caribbean","USVI, Caribbean","Trinidad & Tobago, Caribbean",
+  // Hawaii
+  "Oahu, Hawaii","Maui, Hawaii","Big Island, Hawaii","Kauai, Hawaii","Lanai, Hawaii","Molokai, Hawaii",
+  // Mexico
+  "Cabo San Lucas, Mexico","Los Cabos, Mexico","Cancun, Mexico","Tulum, Mexico",
+  "Riviera Maya, Mexico","Puerto Vallarta, Mexico","Punta Mita, Mexico",
+  "Huatulco, Mexico","Oaxaca, Mexico","Mexico City, Mexico","San Miguel de Allende, Mexico",
+  // Central & South America
+  "Costa Rica","Belize","Panama City, Panama","Cartagena, Colombia","Bogota, Colombia",
+  "Medellin, Colombia","Galapagos, Ecuador","Machu Picchu, Peru","Lima, Peru","Buenos Aires, Argentina",
+  "Rio de Janeiro, Brazil","Sao Paulo, Brazil","Patagonia, Chile","Santiago, Chile",
+  // Europe — Western
+  "Amalfi Coast, Italy","Rome, Italy","Florence, Italy","Venice, Italy","Milan, Italy","Sicily, Italy",
+  "Sardinia, Italy","Tuscany, Italy","Capri, Italy","Barcelona, Spain","Madrid, Spain",
+  "Ibiza, Spain","Mallorca, Spain","San Sebastian, Spain","Seville, Spain",
+  "Paris, France","Cote d'Azur, France","Bordeaux, France","Lyon, France",
+  "Santorini, Greece","Mykonos, Greece","Athens, Greece","Crete, Greece","Rhodes, Greece",
+  "Lisbon, Portugal","Algarve, Portugal","Porto, Portugal",
+  "Dubrovnik, Croatia","Split, Croatia","Hvar, Croatia","Kotor, Montenegro",
+  "London, UK","Edinburgh, UK","Cotswolds, UK","Lake District, UK",
+  "Amsterdam, Netherlands","Brussels, Belgium","Bruges, Belgium",
+  "Zurich, Switzerland","Geneva, Switzerland","Interlaken, Switzerland","Zermatt, Switzerland",
+  // Europe — Eastern & Nordic
+  "Prague, Czech Republic","Vienna, Austria","Budapest, Hungary","Krakow, Poland",
+  "Tallinn, Estonia","Riga, Latvia","Vilnius, Lithuania",
+  "Copenhagen, Denmark","Stockholm, Sweden","Oslo, Norway","Helsinki, Finland","Reykjavik, Iceland",
+  // Middle East & Africa
+  "Dubai, UAE","Abu Dhabi, UAE","Maldives","Seychelles","Zanzibar, Tanzania",
+  "Marrakech, Morocco","Cape Town, South Africa","Kruger, South Africa","Nairobi, Kenya",
+  "Masai Mara, Kenya","Serengeti, Tanzania","Mauritius","Reunion Island",
+  "Tel Aviv, Israel","Amman, Jordan","Petra, Jordan",
+  // Asia & Pacific
+  "Tokyo, Japan","Kyoto, Japan","Osaka, Japan","Okinawa, Japan",
+  "Bali, Indonesia","Lombok, Indonesia","Komodo, Indonesia",
+  "Bangkok, Thailand","Phuket, Thailand","Koh Samui, Thailand","Chiang Mai, Thailand",
+  "Singapore","Kuala Lumpur, Malaysia","Langkawi, Malaysia",
+  "Hong Kong","Taipei, Taiwan","Seoul, South Korea","Beijing, China","Shanghai, China",
+  "Mumbai, India","Goa, India","Kerala, India","Rajasthan, India",
+  "Colombo, Sri Lanka","Kathmandu, Nepal","Bhutan",
+  "Sydney, Australia","Melbourne, Australia","Cairns, Australia","Great Barrier Reef, Australia",
+  "Auckland, New Zealand","Queenstown, New Zealand","Fiji","Tahiti / Bora Bora, French Polynesia",
+  "Palau","Vanuatu",
+  // USA
+  "New York City, NY","Los Angeles, CA","San Francisco, CA","Miami, FL","Chicago, IL",
+  "New Orleans, LA","Nashville, TN","Austin, TX","Seattle, WA","Portland, OR",
+  "Las Vegas, NV","Phoenix / Scottsdale, AZ","Denver, CO","Boston, MA","Washington DC",
+  "Napa / Sonoma, CA","Big Sur, CA","Palm Springs, CA","Sedona, AZ","Jackson Hole, WY",
+  "Aspen, CO","Vail, CO","Park City, UT","Zion, UT","Moab, UT",
+  "Savannah, GA","Charleston, SC","Asheville, NC","Key West, FL","Sarasota, FL",
+  // Canada
+  "Vancouver, BC","Victoria, BC","Banff, Alberta","Whistler, BC","Quebec City, QC","Montreal, QC","Toronto, ON"
+];
+
+// ============================================================
+// AMENITY CONFIG
+// ============================================================
+const AMENITY_CONFIG = [
+  {id:'pool',       label:'Pool',            icon:'🏊'},
+  {id:'beach',      label:'Beach Access',    icon:'🏖️'},
+  {id:'spa',        label:'Spa',             icon:'💆'},
+  {id:'gym',        label:'Fitness Center',  icon:'🏋️'},
+  {id:'restaurant', label:'Restaurant',      icon:'🍽️'},
+  {id:'kids_club',  label:"Kids' Club",      icon:'👶'},
+  {id:'water_sports',label:'Water Sports',   icon:'🤿'},
+  {id:'golf',       label:'Golf',            icon:'⛳'},
+  {id:'tennis',     label:'Tennis',          icon:'🎾'},
+  {id:'concierge',  label:'Concierge',       icon:'🛎️'},
+  {id:'room_service',label:'Room Service',   icon:'🛏️'},
+  {id:'parking',    label:'Parking',         icon:'🅿️'},
+  {id:'airport_shuttle',label:'Airport Shuttle',icon:'🚌'},
+  {id:'pet_friendly',label:'Pet Friendly',   icon:'🐾'},
+  {id:'adults_only', label:'Adults Only',    icon:'🔞'}
+];
+
+const PROGRAM_CONFIG = [
+  {id:'amex_fhr',    label:'Amex FHR',      cls:'amex'},
+  {id:'chase_edit',  label:'Chase The Edit', cls:'chase'},
+  {id:'hyatt',       label:'World of Hyatt', cls:'hyatt'},
+  {id:'marriott',    label:'Marriott Bonvoy',cls:'marriott'},
+  {id:'hilton',      label:'Hilton Honors',  cls:'hilton'},
+  {id:'ike',         label:'IHG One Rewards',cls:'ihg'},
+  {id:'virtuoso',    label:'Virtuoso',       cls:'virtuoso'}
+];
+
+// ============================================================
+// TRIPS DATA (Hawaii 2026)
+// ============================================================
+const TRIPS = {
+  'hawaii-2026': {
+    id:'hawaii-2026', name:'Oahu, Hawaii', emoji:'🌺',
+    dates:'Late Sep – Early Oct 2026', nights:4,
+    travelers:{adults:2,children:1,childAges:['toddler']},
+    nonNegotiables:['pool'],
+    defaultWeights:{location:20,design:20,service:30,family:15,review:15},
+    properties:[
+      {
+        id:'fs', name:'Four Seasons Resort Oahu at Ko Olina',
+        type:'resort', allInclusive:false,
+        tier:'ultra-luxury', brand:'Four Seasons',
+        location:'Ko Olina, West Oahu',
+        loyaltyProgram:'amex_fhr',
+        benefit:{type:'FHR',bkfstPerDay:80,credit:100,notes:'Breakfast 2 guests, $100 F&B credit, room upgrade if avail'},
+        scores:{location:8,design:9,service:10,family:10,review:9},
+        taxRate:0.1496, resortFee:50,
+        amenities:['pool','beach','spa','gym','restaurant','kids_club','water_sports','concierge','room_service'],
+        rooms:[
+          {name:'Deluxe Garden Room',rate:795,beds:'King or 2 Doubles',sqft:640,familyRec:false},
+          {name:'Ocean View Room',rate:995,beds:'King or 2 Doubles',sqft:640,familyRec:true},
+          {name:'Junior Suite — Ocean View',rate:1395,beds:'King + sofa bed',sqft:1200,familyRec:false},
+          {name:'One-Bedroom Suite',rate:1895,beds:'King + living room',sqft:1400,familyRec:false}
+        ],
+        photo:'https://www.fourseasons.com/alt/img-opt/~70.1530.0,0000-400,5000-3000,0000-1687,5000/publish/content/dam/fourseasons/images/web/OAH/OAH_331_original.jpg',
+        photoGradient:'linear-gradient(135deg,#1a5276,#2980b9,#85c1e9)',
+        galleryUrl:'https://www.fourseasons.com/oahu/photo-gallery/',
+        reviewHighlights:{
+          positive:['Exceptional family beach access','World-class pool complex','Impeccable service consistency'],
+          concerns:['Remote Ko Olina location','Premium pricing'],
+          familySignal:'Excellent — lagoon-protected swimming, dedicated kids programs'
+        }
+      },
+      {
+        id:'jw', name:'JW Marriott Ihilani Ko Olina',
+        type:'resort', allInclusive:false,
+        tier:'luxury', brand:'Marriott',
+        location:'Ko Olina, West Oahu',
+        loyaltyProgram:'marriott',
+        benefit:{type:'Marriott',bkfstPerDay:0,credit:0,notes:'Bonvoy points earning; suite upgrades for Platinum+'},
+        scores:{location:7,design:7,service:7,family:9,review:8},
+        taxRate:0.1496, resortFee:45,
+        amenities:['pool','beach','spa','gym','restaurant','kids_club','water_sports','concierge','room_service'],
+        rooms:[
+          {name:'Deluxe Room — Ocean/Lagoon View',rate:420,beds:'King or 2 Queens',sqft:660,familyRec:false},
+          {name:'Naupaka Junior Suite',rate:575,beds:'King + sofa bed',sqft:820,familyRec:true},
+          {name:'Ihilani Suite',rate:995,beds:'King + separate living room',sqft:1200,familyRec:false},
+          {name:'Pacific Suite',rate:1595,beds:'2 bedrooms, King + Queen',sqft:1800,familyRec:false}
+        ],
+        photo:null,
+        photoGradient:'linear-gradient(135deg,#1a3a52,#2e6da4,#6fabd4)',
+        galleryUrl:'https://www.marriott.com/en-us/hotels/hnlji-jw-marriott-ihilani-ko-olina-resort-and-spa/photos/',
+        reviewHighlights:{
+          positive:['Great lagoon access for families','Good Marriott points value','Consistent service'],
+          concerns:['Aging property in some areas','Dated design elements'],
+          familySignal:'Very good — lagoon beach, multiple pools, easy family logistics'
+        }
+      },
+      {
+        id:'hal', name:'Halekulani Hotel',
+        type:'boutique', allInclusive:false,
+        tier:'ultra-luxury', brand:'Independent',
+        location:'Waikiki, Honolulu',
+        loyaltyProgram:'amex_fhr',
+        benefit:{type:'FHR',bkfstPerDay:80,credit:100,notes:'Breakfast 2 guests, $100 F&B credit'},
+        scores:{location:9,design:9,service:9,family:5,review:8},
+        taxRate:0.1496, resortFee:0,
+        amenities:['pool','beach','spa','gym','restaurant','concierge','room_service'],
+        rooms:[
+          {name:'Garden Courtyard Room',rate:695,beds:'King',sqft:485,familyRec:false},
+          {name:'Partial Ocean View Room',rate:795,beds:'King',sqft:485,familyRec:false},
+          {name:'Ocean View Room',rate:895,beds:'King',sqft:485,familyRec:false},
+          {name:'Junior Ocean View Suite',rate:1295,beds:'King + sofa bed',sqft:720,familyRec:true}
+        ],
+        photo:'https://www.halekulani.com/wp-content/uploads/2024/03/HKU_Pool_Sunrise_02_web.jpg',
+        photoGradient:'linear-gradient(135deg,#d4a017,#f0c040,#f8e8a0)',
+        galleryUrl:'https://www.halekulani.com/gallery',
+        reviewHighlights:{
+          positive:['Legendary orchid pool','Extraordinary dining','Quiet refined atmosphere'],
+          concerns:['Not family-oriented','Waikiki crowds nearby','Very adult-focused'],
+          familySignal:'Limited — beautiful but geared toward couples/adults'
+        }
+      },
+      {
+        id:'royal', name:'The Royal Hawaiian',
+        type:'resort', allInclusive:false,
+        tier:'luxury', brand:'Marriott Luxury Collection',
+        location:'Waikiki, Honolulu',
+        loyaltyProgram:'marriott',
+        benefit:{type:'Marriott',bkfstPerDay:0,credit:0,notes:'Bonvoy points; Platinum upgrades'},
+        scores:{location:9,design:8,service:7,family:6,review:7},
+        taxRate:0.1496, resortFee:35,
+        amenities:['pool','beach','spa','gym','restaurant','concierge','room_service'],
+        rooms:[
+          {name:'Historic Garden Room',rate:450,beds:'King or 2 Queens',sqft:400,familyRec:false},
+          {name:'Historic 3-Bed Family Room',rate:695,beds:'3 beds (King + 2 Queens)',sqft:540,familyRec:true},
+          {name:'Mailani Premier Ocean Room',rate:750,beds:'King',sqft:470,familyRec:false},
+          {name:'Mailani Ocean Suite',rate:1295,beds:'King + separate living room',sqft:950,familyRec:false}
+        ],
+        photo:'https://www.royal-hawaiian.com/datas/images/2022/11/02/de233b03eb6880819293e5279e798232cee93aa0.jpg',
+        photoGradient:'linear-gradient(135deg,#8b1a4a,#c0395e,#e87ca0)',
+        galleryUrl:'https://www.royal-hawaiian.com/photo-gallery/',
+        reviewHighlights:{
+          positive:['Iconic "Pink Palace" history','Prime Waikiki beach location','Beautiful heritage architecture'],
+          concerns:['Smaller rooms for price','Crowded Waikiki beach','Noise from strip'],
+          familySignal:'Moderate — beach access good, but rooms tight for families'
+        }
+      },
+      {
+        id:'kah', name:'The Kahala Hotel & Resort',
+        type:'boutique', allInclusive:false,
+        tier:'luxury', brand:'Independent',
+        location:'Kahala, East Honolulu',
+        loyaltyProgram:'amex_fhr',
+        benefit:{type:'FHR',bkfstPerDay:80,credit:100,notes:'Breakfast 2 guests, $100 F&B credit'},
+        scores:{location:6,design:8,service:8,family:6,review:7},
+        taxRate:0.1496, resortFee:40,
+        amenities:['pool','beach','spa','gym','restaurant','concierge','room_service','dolphin_lagoon'],
+        rooms:[
+          {name:'Dolphin Lagoon View Room',rate:445,beds:'King or 2 Queens',sqft:550,familyRec:false},
+          {name:'Ocean View Room',rate:565,beds:'King or 2 Queens',sqft:550,familyRec:true},
+          {name:'Kahala Kai Suite',rate:1095,beds:'King + living area + lanai',sqft:1250,familyRec:false},
+          {name:'Kahala Kai Two-Bedroom Suite',rate:1895,beds:'2 Kings + living room',sqft:1800,familyRec:false}
+        ],
+        photo:null,
+        photoGradient:'linear-gradient(135deg,#0e6655,#1abc9c,#76d7c4)',
+        galleryUrl:'https://www.kahalaresort.com/photo-gallery',
+        reviewHighlights:{
+          positive:['Secluded residential neighborhood','Dolphin Quest experience','Quiet luxury feel'],
+          concerns:['Far from tourist areas','Requires car for activities','Modest beach'],
+          familySignal:'Good — Dolphin Quest unique for kids, quieter pace'
+        }
+      },
+      {
+        id:'lxr', name:'Ka La\'i Waikiki Beach, LXR Hotels & Resorts',
+        type:'resort', allInclusive:false,
+        tier:'luxury', brand:'Hilton LXR',
+        location:'Waikiki, Honolulu',
+        loyaltyProgram:'hilton',
+        benefit:{type:'Hilton',bkfstPerDay:0,credit:0,notes:'Hilton Honors points; Diamond upgrades'},
+        scores:{location:8,design:9,service:9,family:4,review:7},
+        taxRate:0.1496, resortFee:55,
+        amenities:['pool','beach','spa','gym','restaurant','concierge','room_service'],
+        rooms:[
+          {name:'LXR Studio Suite',rate:665,beds:'King, full kitchen + sofa bed',sqft:400,familyRec:false},
+          {name:'LXR One-Bedroom City View Suite',rate:845,beds:'King + living room, full kitchen',sqft:795,familyRec:false},
+          {name:'LXR One-Bedroom Ocean View Suite',rate:995,beds:'King + living room, full kitchen',sqft:795,familyRec:true},
+          {name:'LXR Two-Bedroom Ocean View Suite',rate:1695,beds:'King + Queen, full kitchen + W/D',sqft:1400,familyRec:false}
+        ],
+        photo:null,
+        photoGradient:'linear-gradient(135deg,#1a1a2e,#16213e,#0f4c81)',
+        galleryUrl:'https://www.hilton.com/en/hotels/hnllxlx-ka-lai-waikiki-beach/photos/',
+        reviewHighlights:{
+          positive:['Stunning modern design','Excellent rooftop pool','Premium suite product'],
+          concerns:['Not family-focused','Very adult/lifestyle oriented','High resort fees'],
+          familySignal:'Limited — adult lifestyle brand, limited kids amenities'
+        }
+      },
+      {
+        id:'rc', name:'The Ritz-Carlton Residences, Turtle Bay',
+        type:'resort', allInclusive:false,
+        tier:'luxury', brand:'Ritz-Carlton',
+        location:'Turtle Bay, North Shore',
+        loyaltyProgram:'marriott',
+        benefit:{type:'Marriott',bkfstPerDay:0,credit:0,notes:'Bonvoy points; Platinum upgrades'},
+        scores:{location:5,design:8,service:8,family:7,review:7},
+        taxRate:0.1496, resortFee:45,
+        amenities:['pool','beach','spa','gym','restaurant','kids_club','water_sports','golf','concierge','room_service'],
+        rooms:[
+          {name:'Oceanfront Room',rate:695,beds:'King or 2 Queens',sqft:500,familyRec:false},
+          {name:'Ocean Front Bungalow',rate:1095,beds:'King, private lanai + dedicated host',sqft:650,familyRec:true},
+          {name:'Oceanfront Club Room',rate:1195,beds:'King, RC Club lounge access',sqft:500,familyRec:false},
+          {name:"Ali\'i Suite",rate:2095,beds:'2 bedrooms, sweeping North Shore views',sqft:1800,familyRec:false}
+        ],
+        photo:'https://cache.marriott.com/is/image/marriotts7prod/rz-hnlkz-aerial-turtle-11922:Wide-Hor?wid=1336&fit=constrain',
+        photoGradient:'linear-gradient(135deg,#2d4a22,#4a7c59,#7dba8f)',
+        galleryUrl:'https://www.ritzcarlton.com/en/hotels/hnlkz-the-ritz-carlton-oahu-turtle-bay/rooms/',
+        reviewHighlights:{
+          positive:['Legendary North Shore setting','Surfing culture access','Spacious grounds'],
+          concerns:['Very remote — 45min from Honolulu','Limited dining nearby','Requires full car dependency'],
+          familySignal:'Good for active families — surf culture, space, outdoor activities'
+        }
+      }
+    ]
+  }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentTripId = Object.keys(TRIPS)[0];
+const trip = () => TRIPS[currentTripId];
+
+let formState = {
+  destination: '',
+  startDate: null,
+  endDate: null,
+  adults: 2,
+  children: 1,
+  childAges: [],
+  nonNegotiables: ['pool'],
+  customNonNeg: [],
+  programs: ['amex_fhr','chase_edit','marriott','hyatt'],
+  lodgingTypes: [],
+  budgetTier: '',
+  submitted: false
+};
+
+// ── Trip Storage ─────────────────────────────────────────
+const STORAGE_KEY = 'lodging_trips_v4';
+const ACTIVE_KEY  = 'lodging_active_v4';
+
+function loadStoredTrips() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch(e) { return {}; }
+}
+function saveStoredTrips(extra) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(extra)); } catch(e) {}
+}
+function getActiveTripId() {
+  return localStorage.getItem(ACTIVE_KEY) || 'hawaii-2026';
+}
+function setActiveTripId(id) {
+  localStorage.setItem(ACTIVE_KEY, id);
+}
+
+// Merge seed + stored trips; seed is always available as fallback
+const _storedTrips = loadStoredTrips();
+const allTrips = {...TRIPS, ..._storedTrips};  // TRIPS = seed (hawaii)
+let activeTripId = getActiveTripId();
+if (!allTrips[activeTripId]) activeTripId = 'hawaii-2026';
+
+function trip() { return allTrips[activeTripId]; }
+
+let weights = {...trip().defaultWeights};
+let roomSelections = {};
+let filters = {sort:'composite', view:'grid', tripMode:'all'};
+const calState = {open:false, month:new Date().getMonth(), year:new Date().getFullYear(), selecting:'start'};
+let destDropdownOpen = false;
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendar() {
+  const popup = document.getElementById('cal-popup');
+  if (!popup) return;
+  const months = ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
+  
+  function monthGrid(mo, yr) {
+    const first = new Date(yr, mo, 1).getDay();
+    const days = new Date(yr, mo+1, 0).getDate();
+    let html = `<div class="cal-month-label">${months[mo]} ${yr}</div>
+      <div class="cal-grid">
+        <div class="cal-header">Su</div><div class="cal-header">Mo</div>
+        <div class="cal-header">Tu</div><div class="cal-header">We</div>
+        <div class="cal-header">Th</div><div class="cal-header">Fr</div>
+        <div class="cal-header">Sa</div>`;
+    for (let i=0; i<first; i++) html += `<div class="cal-day empty"></div>`;
+    for (let d=1; d<=days; d++) {
+      const dt = new Date(yr, mo, d);
+      const iso = dt.toISOString().split('T')[0];
+      const today = new Date(); today.setHours(0,0,0,0);
+      let cls = 'cal-day';
+      if (dt < today) cls += ' disabled';
+      else if (formState.startDate && iso === formState.startDate) cls += ' selected-start';
+      else if (formState.endDate && iso === formState.endDate) cls += ' selected-end';
+      else if (formState.startDate && formState.endDate && iso > formState.startDate && iso < formState.endDate) cls += ' in-range';
+      const disabled = dt < today ? 'disabled' : '';
+      html += `<div class="${cls}" onclick="selectDate('${iso}')" ${disabled}>${d}</div>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+
+  // Show two months
+  let mo1 = calState.month, yr1 = calState.year;
+  let mo2 = mo1 + 1, yr2 = yr1;
+  if (mo2 > 11) { mo2 = 0; yr2++; }
+
+  popup.innerHTML = `
+    <div class="cal-nav">
+      <button onclick="prevMonth()" class="cal-nav-btn">‹</button>
+      <div class="cal-two-months">
+        ${monthGrid(mo1, yr1)}
+        ${monthGrid(mo2, yr2)}
+      </div>
+      <button onclick="nextMonth()" class="cal-nav-btn">›</button>
+    </div>
+    <div class="cal-footer">
+      ${formState.startDate ? `<span>From: <strong>${formState.startDate}</strong></span>` : '<span>Select start date</span>'}
+      ${formState.endDate ? `<span>  To: <strong>${formState.endDate}</strong></span>` : (formState.startDate ? '<span>  Select end date</span>' : '')}
+      ${formState.startDate && formState.endDate ? `<span class="cal-done-hint">Dates set ✓</span><button onclick="clearDates()" class="cal-clear-btn">Clear</button><button onclick="toggleCalendar(false)" class="cal-done-btn">Done ✓</button>` : ''}
+    </div>`;
+}
+
+function selectDate(iso) {
+  if (!formState.startDate || (formState.startDate && formState.endDate)) {
+    formState.startDate = iso;
+    formState.endDate = null;
+  } else if (iso < formState.startDate) {
+    formState.endDate = formState.startDate;
+    formState.startDate = iso;
+  } else if (iso === formState.startDate) {
+    formState.startDate = null;
+  } else {
+    formState.endDate = iso;
+  }
+  updateDateDisplay();
+  renderCalendar();
+  // calendar stays open — user clicks Done ✓ or clicks outside
+}
+
+function clearDates() {
+  formState.startDate = null; formState.endDate = null;
+  updateDateDisplay(); renderCalendar();
+}
+
+function updateDateDisplay() {
+  const el = document.getElementById('date-display');
+  if (!el) return;
+  if (formState.startDate && formState.endDate) {
+    const nights = Math.round((new Date(formState.endDate) - new Date(formState.startDate)) / 86400000);
+    el.textContent = `${formState.startDate}  →  ${formState.endDate}  (${nights} night${nights!==1?'s':''})`;
+    el.classList.add('has-value');
+  } else if (formState.startDate) {
+    el.textContent = `${formState.startDate}  →  Select end date`;
+    el.classList.remove('has-value');
+  } else {
+    el.textContent = 'Select travel dates';
+    el.classList.remove('has-value');
+  }
+}
+
+function toggleCalendar(force) {
+  calState.open = force !== undefined ? force : !calState.open;
+  const popup = document.getElementById('cal-popup');
+  if (!popup) return;
+  if (calState.open) { popup.style.display='block'; renderCalendar(); }
+  else popup.style.display='none';
+}
+
+function prevMonth() {
+  if (calState.month === 0) { calState.month=11; calState.year--; }
+  else calState.month--;
+  renderCalendar();
+}
+
+function nextMonth() {
+  if (calState.month === 11) { calState.month=0; calState.year++; }
+  else calState.month++;
+  renderCalendar();
+}
+
+// ============================================================
+// DESTINATION AUTOCOMPLETE
+// ============================================================
+function filterDestinations(q) {
+  if (!q || q.length < 2) return [];
+  const lq = q.toLowerCase();
+  return DESTINATIONS.filter(d => d.toLowerCase().includes(lq)).slice(0, 8);
+}
+
+function renderDestDropdown(results) {
+  const dd = document.getElementById('dest-dropdown');
+  if (!dd) return;
+  if (!results.length) { dd.style.display='none'; return; }
+  dd.innerHTML = results.map((r,i) =>
+    `<div class="dest-item" onclick="selectDest('${r.replace(/'/g,"\\'")}')">
+      <span class="dest-icon">📍</span>${r}
+    </div>`
+  ).join('');
+  dd.style.display='block';
+}
+
+function selectDest(val) {
+  formState.destination = val;
+  const inp = document.getElementById('dest-input');
+  if (inp) inp.value = val;
+  const dd = document.getElementById('dest-dropdown');
+  if (dd) dd.style.display='none';
+}
+
+// ============================================================
+// TRAVELER COUNTERS
+// ============================================================
+function changeCount(field, delta) {
+  if (field === 'adults') {
+    formState.adults = Math.max(1, formState.adults + delta);
+    const el = document.getElementById('adults-count');
+    if (el) el.textContent = formState.adults;
+  } else {
+    formState.children = Math.max(0, formState.children + delta);
+    const el = document.getElementById('children-count');
+    if (el) el.textContent = formState.children;
+  }
+}
+
+// ============================================================
+// CHIP TOGGLES
+// ============================================================
+function toggleChip(id, group) {
+  if (group === 'nonneg') {
+    if (formState.nonNegotiables.includes(id))
+      formState.nonNegotiables = formState.nonNegotiables.filter(x=>x!==id);
+    else formState.nonNegotiables.push(id);
+  } else if (group === 'program') {
+    if (formState.programs.includes(id))
+      formState.programs = formState.programs.filter(x=>x!==id);
+    else formState.programs.push(id);
+  } else if (group === 'lodging') {
+    if (formState.lodgingTypes.includes(id))
+      formState.lodgingTypes = formState.lodgingTypes.filter(x=>x!==id);
+    else formState.lodgingTypes.push(id);
+  }
+  renderChips(group);
+}
+
+function renderChips(group) {
+  if (group === 'nonneg' || group === 'all') {
+    const wrap = document.getElementById('nonneg-chips');
+    if (wrap) {
+      AMENITY_CONFIG.forEach(a => {
+        const chip = document.getElementById('chip-nonneg-'+a.id);
+        if (chip) chip.classList.toggle('active', formState.nonNegotiables.includes(a.id));
+      });
+    }
+  }
+  if (group === 'program' || group === 'all') {
+    PROGRAM_CONFIG.forEach(p => {
+      const chip = document.getElementById('chip-prog-'+p.id);
+      if (chip) chip.classList.toggle('active', formState.programs.includes(p.id));
+    });
+  }
+  if (group === 'lodging' || group === 'all') {
+    ['resort','boutique','villa','rental','all_inclusive'].forEach(t => {
+      const chip = document.getElementById('chip-lodging-'+t);
+      if (chip) chip.classList.toggle('active', formState.lodgingTypes.includes(t));
+    });
+  }
+}
+
+function addCustomNonNeg() {
+  const inp = document.getElementById('custom-nonneg-input');
+  if (!inp || !inp.value.trim()) return;
+  const val = inp.value.trim();
+  if (!formState.customNonNeg.includes(val)) {
+    formState.customNonNeg.push(val);
+    formState.nonNegotiables.push('custom:'+val);
+    renderCustomChips();
+  }
+  inp.value = '';
+}
+
+function renderCustomChips() {
+  const wrap = document.getElementById('custom-chips-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = formState.customNonNeg.map(c =>
+    `<span class="chip active custom-chip" onclick="removeCustom('${c}')">
+      ${c} <span class="chip-remove">×</span>
+    </span>`
+  ).join('');
+}
+
+function removeCustom(val) {
+  formState.customNonNeg = formState.customNonNeg.filter(x=>x!==val);
+  formState.nonNegotiables = formState.nonNegotiables.filter(x=>x!=='custom:'+val);
+  renderCustomChips();
+}
+
+function selectSegment(group, val) {
+  if (group === 'budget') {
+    formState.budgetTier = val;
+    document.querySelectorAll('.seg-budget .seg-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.val === val);
+    });
+  }
+}
+
+
+
+// ============================================================
+// PROMPT GENERATION
+// ============================================================
+function getNights() {
+  if (formState.startDate && formState.endDate) {
+    return Math.round((new Date(formState.endDate) - new Date(formState.startDate)) / 86400000);
+  }
+  return null;
+}
+
+function updateResearchTypes() {
+  // Used by prompt generators — reflects current checkbox state
+  formState.researchHotels = document.getElementById('research-hotels')?.checked ?? true;
+  formState.researchRentals = document.getElementById('research-rentals')?.checked ?? true;
+}
+
+function generateCoworkBrief() {
+  const nights = getNights();
+  const dateStr = formState.startDate && formState.endDate
+    ? `${formState.startDate} to ${formState.endDate} (${nights} nights)`
+    : '[dates not set]';
+  const travelers = `${formState.adults} adult${formState.adults!==1?'s':''}${formState.children ? ', '+formState.children+' child'+( formState.children!==1?'ren':'') : ''}`;
+  const nonNegs = formState.nonNegotiables.map(n => n.startsWith('custom:') ? n.replace('custom:','') : (AMENITY_CONFIG.find(a=>a.id===n)||{label:n}).label).join(', ') || 'none';
+  const programs = formState.programs.map(p => (PROGRAM_CONFIG.find(x=>x.id===p)||{label:p}).label).join(', ') || 'none';
+  const lodging = formState.lodgingTypes.length ? formState.lodgingTypes.join(', ') : 'open to all types';
+  const researchScope = [
+    formState.researchHotels !== false ? 'Hotels & Resorts' : null,
+    formState.researchRentals !== false ? 'Curated Rentals (Plum Guide, onefinestay)' : null
+  ].filter(Boolean).join(' + ') || 'Hotels & Resorts';
+  const budget = formState.budgetTier || 'not specified';
+
+  return `LODGING RESEARCH REQUEST
+========================
+Destination: ${formState.destination || '[not set]'}
+Research Scope: ${researchScope}
+Dates: ${dateStr}
+Travelers: ${travelers}
+Non-negotiables: ${nonNegs}
+Loyalty/Card Programs: ${programs}
+Lodging preference: ${lodging}
+Budget tier: ${budget}
+
+TASK: Research and evaluate the top lodging options for this trip using the Lodging Evaluator framework:
+
+1. SCORING (0–10 per dimension):
+   - Location/Access (20%): proximity to key areas, beach access, transportation
+   - Design/Experience (20%): architecture, rooms, aesthetic, wow factor
+   - Service (30%): staff quality, responsiveness, personalization [exclude for rentals/villas; redistribute weight proportionally]
+   - Family Suitability (15%): amenities for traveler profile, safety, programming
+   - Review Confidence (15%): consumer signal quality, thematic positives, concerns, family signal
+
+2. COST MODEL per property:
+   Recommend best room type for traveler profile, then:
+   Gross = (nightly rate × nights) × (1 + tax rate) + (resort fee × nights)
+   Benefit deductions = breakfast credit ($/day × nights) + F&B/property credit (where applicable via FHR/Chase The Edit)
+   Effective Cost = Gross − Benefit Deductions
+
+3. OUTPUT FORMAT for each property:
+   - Name, type (resort/boutique/villa/rental), brand, location
+   - All-inclusive: yes/no
+   - Loyalty program affiliation
+   - Scores: location, design, service, family, review (0–10 each)
+   - Composite score (weighted average)
+   - Recommended room: name, nightly rate, beds, sqft
+   - Cost breakdown: base total, taxes (include local tax rate), resort fees, gross, benefit deductions, effective total, effective nightly
+   - Review highlights: 3 positives, 2–3 concerns, family signal summary
+   - Key amenities available
+
+4. For curated rentals, search Plum Guide (plumguide.com) and onefinestay (onefinestay.com) in addition to standard hotel brands.
+
+5. Deliver: top 5–7 properties ranked by composite score with full detail above.
+
+6. Also return an importable JSON block in this exact schema (for dashboard import):
+
+\`\`\`json
+{
+  "tripId": "destination-year",
+  "name": "Trip Name",
+  "destination": "City, Country",
+  "nights": N,
+  "defaultWeights": {"location":20,"design":20,"service":30,"family":15,"review":15},
+  "nonNegotiables": [],
+  "properties": [
+    {
+      "id": "unique-id",
+      "name": "Property Name",
+      "type": "resort|boutique|villa|apartment|house",
+      "platform": "plum_guide|onefinestay|vacasa|null",
+      "allInclusive": false,
+      "tier": "luxury|ultra-luxury|upscale",
+      "brand": "Brand Name",
+      "location": "Neighborhood, City",
+      "loyaltyProgram": "marriott|hilton|hyatt|amex_fhr|chase_edit|none",
+      "benefit": {"type":"none","bkfstPerDay":0,"credit":0,"notes":""},
+      "scores": {"location":0,"design":0,"service":0,"family":0,"review":0},
+      "taxRate": 0.00,
+      "resortFee": 0,
+      "cleaningFee": 0,
+      "serviceFeeRate": 0,
+      "bedrooms": null,
+      "bathrooms": null,
+      "maxGuests": null,
+      "hasKitchen": false,
+      "hasLaundry": false,
+      "amenities": [],
+      "rooms": [{"name":"Room Name","rate":0,"beds":"King","sqft":0,"familyRec":false}],
+      "photo": null,
+      "photoGradient": "linear-gradient(135deg,#1a3a2a,#2d6a4f,#74c69d)",
+      "galleryUrl": "https://",
+      "reviewHighlights": {
+        "positive": ["","",""],
+        "concerns": ["",""],
+        "familySignal": ""
+      }
+    }
+  ]
+}
+\`\`\``;
+}
+
+function generateClaudeAIPrompt() {
+  const nights = getNights();
+  const dateStr = formState.startDate && formState.endDate
+    ? `${formState.startDate} to ${formState.endDate} (${nights} nights)`
+    : '[dates not set]';
+  const travelers = `${formState.adults} adult${formState.adults!==1?'s':''}${formState.children ? ', '+formState.children+' child'+( formState.children!==1?'ren':'') : ''}`;
+  const nonNegs = formState.nonNegotiables.map(n => n.startsWith('custom:') ? n.replace('custom:','') : (AMENITY_CONFIG.find(a=>a.id===n)||{label:n}).label).join(', ') || 'none';
+  const programs = formState.programs.map(p => (PROGRAM_CONFIG.find(x=>x.id===p)||{label:p}).label).join(', ') || 'none';
+  const lodging = formState.lodgingTypes.length ? formState.lodgingTypes.join(', ') : 'open to all types';
+  const researchScope = [
+    formState.researchHotels !== false ? 'Hotels & Resorts' : null,
+    formState.researchRentals !== false ? 'Curated Rentals (Plum Guide, onefinestay)' : null
+  ].filter(Boolean).join(' + ') || 'Hotels & Resorts';
+  const budget = formState.budgetTier || 'not specified';
+
+  return `You are a luxury travel advisor using a structured evaluation framework. Search scope: ${researchScope}. Research and evaluate lodging for the following trip, then return a scored shortlist with full cost breakdowns.
+
+TRIP PARAMETERS
+===============
+Destination: ${formState.destination || '[not set]'}
+Dates: ${dateStr}
+Travelers: ${travelers}
+Non-negotiables (must-haves): ${nonNegs}
+Loyalty/Card Programs: ${programs}
+Lodging preference: ${lodging}
+Budget tier: ${budget}
+
+EVALUATION FRAMEWORK
+====================
+Score each property 0–10 on five dimensions:
+
+1. LOCATION/ACCESS (default weight 20%)
+   What to assess: proximity to key attractions, beach/pool access, ease of getting around, neighborhood quality
+
+2. DESIGN/EXPERIENCE (default weight 20%)
+   What to assess: architecture, room quality, aesthetic, unique features, overall wow factor
+
+3. SERVICE (default weight 30%) — EXCLUDE for rentals/villas; redistribute proportionally
+   What to assess: staff quality, responsiveness, proactive service, personalization
+
+4. FAMILY SUITABILITY (default weight 15%)
+   What to assess: amenities matching traveler profile, safety, programming for age groups
+
+5. REVIEW CONFIDENCE (default weight 15%)
+   What to assess: volume and recency of reviews, thematic positives, recurring concerns, family-specific signals
+
+COMPOSITE SCORE
+===============
+For hotels/resorts/boutique: composite = (L×20 + D×20 + S×30 + F×15 + R×15) / 100
+For rentals/villas: S=0, redistribute its weight proportionally among other 4 dimensions
+Normalize to 100-point scale.
+
+LOYALTY/CARD BENEFIT DEDUCTIONS
+================================
+- Amex Fine Hotels & Resorts (FHR): breakfast for 2 guests/day + $100 F&B/property credit
+- Chase Sapphire Reserve (The Edit): breakfast for 2 guests/day + $100 property credit
+- Hyatt World of Hyatt: points earning; free night awards; suite upgrades for Globalist
+- Marriott Bonvoy: points earning; suite upgrades for Platinum+
+- Hilton Honors: points earning; room upgrades for Diamond
+
+COST MODEL
+==========
+1. Identify best room type for the traveler profile
+2. Base Total = nightly rate × number of nights
+3. Taxes = Base Total × local tax rate (research the actual rate)
+4. Resort Fees = daily resort fee × number of nights
+5. Gross Total = Base Total + Taxes + Resort Fees
+6. Benefit Value = (breakfast $/person/day × eligible guests × nights) + property credit
+7. Effective Total = Gross Total − Benefit Value
+8. Effective Nightly = Effective Total ÷ nights
+
+OUTPUT FORMAT (repeat for each property)
+=========================================
+**[RANK]. [PROPERTY NAME]**
+Type: [resort/boutique/villa/rental] | All-inclusive: [yes/no] | Brand: [brand] | Location: [area]
+Loyalty affiliation: [program]
+
+Scores:
+- Location: X/10 | Design: X/10 | Service: X/10 | Family: X/10 | Review: X/10
+- **Composite: XX.X / 100**
+
+Recommended room: [room name] — [beds], [sqft]ft², $[rate]/night
+
+Cost breakdown (${nights || 'N'} nights):
+- Base total: $[amount]
+- Taxes ([rate]%): $[amount]
+- Resort fees: $[amount]
+- **Gross total: $[amount]**
+- Benefit deductions: −$[amount] ([benefit detail])
+- **Effective total: $[amount] ($[amount]/night effective)**
+
+Review highlights:
+✅ [positive 1]
+✅ [positive 2]
+✅ [positive 3]
+⚠️ [concern 1]
+⚠️ [concern 2]
+👨‍👩‍👧 Family signal: [summary]
+
+Key amenities: [list]
+
+---
+
+Deliver the top 5–7 properties ranked by composite score. Be specific with rates — use current published rates or clearly note if estimated.
+
+For curated rentals, include results from Plum Guide (plumguide.com) and onefinestay (onefinestay.com) alongside hotel brands. Score rental Service dimension as Host & Management Quality. For rentals, exclude the Service dimension from composite and redistribute its weight proportionally across the other four dimensions.
+
+---
+
+IMPORTABLE JSON OUTPUT
+======================
+After your narrative response, return a JSON block in exactly this schema so the results can be imported directly into the Lodging Evaluator dashboard:
+
+\`\`\`json
+{
+  "tripId": "destination-year",
+  "name": "Trip Name",
+  "destination": "City, Country",
+  "nights": ${nights || 5},
+  "defaultWeights": {"location":20,"design":20,"service":30,"family":15,"review":15},
+  "nonNegotiables": [],
+  "properties": [
+    {
+      "id": "unique-id",
+      "name": "Property Name",
+      "type": "resort|boutique|villa|apartment|house",
+      "platform": "plum_guide|onefinestay|vacasa|null",
+      "allInclusive": false,
+      "tier": "luxury|ultra-luxury|upscale",
+      "brand": "Brand Name",
+      "location": "Neighborhood, City",
+      "loyaltyProgram": "marriott|hilton|hyatt|amex_fhr|chase_edit|none",
+      "benefit": {"type":"none","bkfstPerDay":0,"credit":0,"notes":""},
+      "scores": {"location":0,"design":0,"service":0,"family":0,"review":0},
+      "taxRate": 0.00,
+      "resortFee": 0,
+      "cleaningFee": 0,
+      "serviceFeeRate": 0,
+      "bedrooms": null,
+      "bathrooms": null,
+      "maxGuests": null,
+      "hasKitchen": false,
+      "hasLaundry": false,
+      "amenities": ["pool","beach","spa","gym","restaurant","kids_club","kitchen","laundry","concierge","room_service"],
+      "rooms": [{"name":"Room Name","rate":0,"beds":"King","sqft":0,"familyRec":false}],
+      "photo": null,
+      "photoGradient": "linear-gradient(135deg,#1a3a2a,#2d6a4f,#74c69d)",
+      "galleryUrl": "https://",
+      "reviewHighlights": {
+        "positive": ["","",""],
+        "concerns": ["",""],
+        "familySignal": ""
+      }
+    }
+  ]
+}
+\`\`\`
+
+Fill in all values accurately. Use null for unknown numeric fields. The JSON block should be complete and valid — it will be pasted directly into the tool's Import panel.`;
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+let currentTab = 'cowork';
+
+function showModal(type) {
+  currentTab = type;
+  const overlay = document.getElementById('modal-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  updateModalContent();
+}
+
+function closeModal() {
+  const overlay = document.getElementById('modal-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.modal-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+  updateModalContent();
+}
+
+function updateModalContent() {
+  const coworkBox = document.getElementById('cowork-prompt-box');
+  const claudeBox = document.getElementById('claude-prompt-box');
+  const coworkPane = document.getElementById('cowork-pane');
+  const claudePane = document.getElementById('claude-pane');
+
+  if (coworkBox) coworkBox.textContent = generateCoworkBrief();
+  if (claudeBox) claudeBox.textContent = generateClaudeAIPrompt();
+
+  if (coworkPane) coworkPane.style.display = currentTab === 'cowork' ? 'block' : 'none';
+  if (claudePane) claudePane.style.display = currentTab === 'claude' ? 'block' : 'none';
+
+  document.querySelectorAll('.modal-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === currentTab);
+  });
+}
+
+function copyPrompt(id) {
+  const box = document.getElementById(id);
+  if (!box) return;
+  navigator.clipboard.writeText(box.textContent).then(() => {
+    const btn = box.previousElementSibling?.querySelector('.copy-btn') || 
+                box.parentElement.querySelector('.copy-btn');
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+    }
+  });
+}
+
+function openClaudeAI() {
+  const prompt = generateClaudeAIPrompt();
+  const encoded = encodeURIComponent(prompt);
+  window.open('https://claude.ai/new', '_blank');
+  setTimeout(() => {
+    navigator.clipboard.writeText(prompt).catch(()=>{});
+  }, 500);
+}
+
+// ============================================================
+// INTAKE FORM SUBMIT
+// ============================================================
+function submitIntakeForm() {
+  const dest = document.getElementById('dest-input')?.value?.trim() || '';
+  if (!dest) { alert('Please enter a destination.'); return; }
+  formState.destination = dest;
+  if (!formState.startDate || !formState.endDate) {
+    if (!confirm('No travel dates selected. Continue anyway?')) return;
+  }
+  
+  // Collapse intake, show dashboard
+  const intakeBody = document.getElementById('intake-body');
+  const intakeToggle = document.getElementById('intake-toggle');
+  if (intakeBody) intakeBody.style.display = 'none';
+  if (intakeToggle) {
+    intakeToggle.textContent = `✏️ Edit: ${dest}${formState.startDate ? ' · ' + formState.startDate + ' → ' + formState.endDate : ''}`;
+  }
+  
+  const dashboard = document.getElementById('dashboard-section');
+  const outputActions = document.getElementById('output-actions');
+  if (dashboard) dashboard.style.display = 'block';
+  if (outputActions) outputActions.style.display = 'flex';
+  
+  formState.submitted = true;
+  renderAll();
+  window.scrollTo({top: document.getElementById('dashboard-section')?.offsetTop || 0, behavior:'smooth'});
+}
+
+function toggleIntake() {
+  const body = document.getElementById('intake-body');
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+}
+
+// ============================================================
+// DASHBOARD — SCORING
+// ============================================================
+function scoreLabel(key, p) {
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const labels = {
+    location: 'Location / Access',
+    design:   'Design / Experience',
+    service:  isRental ? 'Host & Mgmt Quality' : 'Service Quality',
+    family:   'Family Suitability',
+    review:   'Review Confidence'
+  };
+  return labels[key] || key;
+}
+
+function computeComposite(p) {
+  let wl=weights.location, wd=weights.design, ws=weights.service, wf=weights.family, wr=weights.review;
+  if (p.type==='rental' || p.type==='villa') {
+    const tot = wl+wd+wf+wr; ws=0;
+    wl=wl/tot*100; wd=wd/tot*100; wf=wf/tot*100; wr=wr/tot*100;
+  }
+  const tot = wl+wd+ws+wf+wr;
+  if (tot===0) return 0;
+  return Math.round(((p.scores.location*wl + p.scores.design*wd + p.scores.service*ws + p.scores.family*wf + p.scores.review*wr)/tot)*10)/10;
+}
+
+function getSelectedRoom(p) {
+  const idx = roomSelections[p.id] !== undefined ? roomSelections[p.id]
+    : p.rooms.findIndex(r=>r.familyRec) > -1 ? p.rooms.findIndex(r=>r.familyRec) : 0;
+  return {room: p.rooms[idx]||p.rooms[0], idx: roomSelections[p.id] !== undefined ? roomSelections[p.id] : p.rooms.findIndex(r=>r.familyRec) > -1 ? p.rooms.findIndex(r=>r.familyRec) : 0};
+}
+
+function computeCosts(p) {
+  const {room, idx} = getSelectedRoom(p);
+  const nights = trip().nights;
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const baseTotal = room.rate * nights;
+  // Rental: add cleaning fee (one-time) + platform service fee
+  const cleaningFee = isRental ? (p.cleaningFee || 0) : 0;
+  const serviceFeeAmt = isRental ? Math.round((baseTotal + cleaningFee) * (p.serviceFeeRate || 0)) : 0;
+  const taxes = Math.round((baseTotal + cleaningFee + serviceFeeAmt) * p.taxRate);
+  const resortFees = isRental ? 0 : (p.resortFee || 0) * nights;
+  const gross = baseTotal + cleaningFee + serviceFeeAmt + taxes + resortFees;
+  
+  let benefitValue = 0;
+  let benefitLines = [];
+  
+  if (p.loyaltyProgram === 'amex_fhr' && p.benefit && formState.programs.includes('amex_fhr')) {
+    if (p.benefit.bkfstPerDay) {
+      const bkfst = p.benefit.bkfstPerDay * nights;
+      benefitValue += bkfst;
+      benefitLines.push(`FHR Breakfast: −$${bkfst}`);
+    }
+    if (p.benefit.credit) {
+      benefitValue += p.benefit.credit;
+      benefitLines.push(`FHR Credit: −$${p.benefit.credit}`);
+    }
+  } else if (p.loyaltyProgram === 'chase_edit' && p.benefit && formState.programs.includes('chase_edit')) {
+    if (p.benefit.bkfstPerDay) {
+      const bkfst = p.benefit.bkfstPerDay * nights;
+      benefitValue += bkfst;
+      benefitLines.push(`The Edit Breakfast: −$${bkfst}`);
+    }
+    if (p.benefit.credit) {
+      benefitValue += p.benefit.credit;
+      benefitLines.push(`The Edit Credit: −$${p.benefit.credit}`);
+    }
+  }
+  
+  const effective = gross - benefitValue;
+  const effectiveNightly = Math.round(effective / nights);
+  
+  return {room, roomIdx:idx, baseTotal, cleaningFee, serviceFeeAmt, taxes, resortFees, gross, benefitValue, benefitLines, effective, effectiveNightly, nights, isRental};
+}
+
+// ============================================================
+// DASHBOARD — RENDER
+// ============================================================
+function scoreBar(val) {
+  const pct = val * 10;
+  const color = val >= 9 ? '#27ae60' : val >= 7 ? '#2980b9' : val >= 5 ? '#f39c12' : '#e74c3c';
+  return `<div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%;background:${color}"></div></div>`;
+}
+
+function costsHTML(p, c) {
+  const roomSel = p.rooms.map((r,i) =>
+    `<option value="${i}" ${i===c.roomIdx?'selected':''}>${r.name} — $${r.rate}/nt${r.familyRec?' ⭐':''}</option>`
+  ).join('');
+  
+  return `
+  <div class="cost-room-select">
+    <label>Room:</label>
+    <select onchange="refreshRoom('${p.id}',this.value)">
+      ${roomSel}
+    </select>
+    <span class="room-detail">${c.room.beds} · ${c.room.sqft}ft²</span>
+  </div>
+  <div class="cost-rows">
+    <div class="cost-row"><span>Base (${c.nights}nt × $${c.room.rate})</span><span>$${c.baseTotal.toLocaleString()}</span></div>
+    <div class="cost-row"><span>Taxes (${Math.round(p.taxRate*100)}%)</span><span>$${c.taxes.toLocaleString()}</span></div>
+    ${c.cleaningFee ? `<div class="cost-row"><span>Cleaning fee (1×)</span><span>$${c.cleaningFee.toLocaleString()}</span></div>` : ''}
+    ${c.serviceFeeAmt ? `<div class="cost-row"><span>Platform service fee</span><span>$${c.serviceFeeAmt.toLocaleString()}</span></div>` : ''}
+    ${c.resortFees ? `<div class="cost-row"><span>Resort fees</span><span>$${c.resortFees.toLocaleString()}</span></div>` : ''}
+    <div class="cost-row gross"><span>Gross total</span><span>$${c.gross.toLocaleString()}</span></div>
+    ${c.benefitLines.map(l=>`<div class="cost-row benefit"><span>${l.split(':')[0]}</span><span class="benefit-val">${l.split(':')[1]}</span></div>`).join('')}
+    <div class="cost-row effective"><span>Effective total</span><span>$${c.effective.toLocaleString()}</span></div>
+    <div class="cost-row nightly"><span>Effective/night</span><span>$${c.effectiveNightly.toLocaleString()}/nt</span></div>
+  </div>`;
+}
+
+function tierBadge(tier) {
+  const map = {'ultra-luxury':'✦ Ultra-Luxury','luxury':'◆ Luxury','upscale':'▲ Upscale','boutique':'◉ Boutique'};
+  return `<span class="tier-badge tier-${tier.replace(/[\s-]/g,'_')}">${map[tier]||tier}</span>`;
+}
+
+function typeBadge(p) {
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const platformMap = {plum_guide:'Plum Guide',onefinestay:'onefinestay',vacasa:'Vacasa',airbnb:'Airbnb',vrbo:'VRBO'};
+  const typeMap = {resort:'🏨 Resort',boutique:'🏡 Boutique',villa:'🏖️ Villa',apartment:'🏢 Apartment',house:'🏠 House',rental:'🏠 Rental'};
+  const label = isRental && p.platform && platformMap[p.platform]
+    ? `🏠 ${platformMap[p.platform]}`
+    : (typeMap[p.type] || p.type);
+  const cls = isRental ? 'rental' : 'hotel';
+  return `<span class="type-badge type-${cls}">${label}</span>`;
+}
+
+function cardHTML(p) {
+  const comp = computeComposite(p);
+  const costs = computeCosts(p);
+  const prog = PROGRAM_CONFIG.find(x=>x.id===p.loyaltyProgram);
+  
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const rentalMeta = isRental ? (() => {
+    const parts = [];
+    if (p.bedrooms)  parts.push(`🛏 ${p.bedrooms}BR`);
+    if (p.hasKitchen) parts.push('🍳 Kitchen');
+    if (p.hasLaundry) parts.push('👕 Laundry');
+    if (p.maxGuests) parts.push(`👥 Up to ${p.maxGuests}`);
+    return parts.length ? `<div class="rental-meta">${parts.map(t=>`<span>${t}</span>`).join('')}</div>` : '';
+  })() : '';
+  const amenityIcons = AMENITY_CONFIG.filter(a => p.amenities.includes(a.id))
+    .map(a => `<span class="amenity-icon" title="${a.label}">${a.icon}</span>`).join('');
+  
+  const photoEl = p.photo
+    ? `<img src="${p.photo}" class="card-photo" alt="${p.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+    : '';
+  
+  return `
+  <div class="prop-card" data-id="${p.id}" data-composite="${comp}" data-effective="${costs.effective}" data-gross="${costs.gross}" data-tier="${p.tier}">
+    <div class="card-photo-wrap" style="background:${p.photoGradient||'#1a2a3a'}">
+      ${photoEl}
+      <div class="card-photo-placeholder" style="display:${p.photo?'none':'flex'}">
+        <a href="${p.galleryUrl}" target="_blank" class="gallery-link">View Gallery ↗</a>
+      </div>
+      <div class="card-badges">
+        ${tierBadge(p.tier)}
+        ${typeBadge(p)}
+        ${p.allInclusive ? '<span class="ai-badge">All-Inclusive</span>' : ''}
+      </div>
+      <div class="card-score-overlay">${comp}</div>
+    </div>
+    <div class="card-body">
+      <h3 class="card-name">${p.name}</h3>
+      <div class="card-location">📍 ${p.location}</div>
+      ${rentalMeta}
+      ${prog ? `<div class="card-program chip ${prog.cls} active sm-chip">${prog.label}</div>` : ''}
+      <div class="scores-grid">
+        <div class="score-item"><span class="score-label">${scoreLabel('location',p)}</span>${scoreBar(p.scores.location)}<span class="score-num">${p.scores.location}</span></div>
+        <div class="score-item"><span class="score-label">${scoreLabel('design',p)}</span>${scoreBar(p.scores.design)}<span class="score-num">${p.scores.design}</span></div>
+        ${!isRental?`<div class="score-item"><span class="score-label">${scoreLabel('service',p)}</span>${scoreBar(p.scores.service)}<span class="score-num">${p.scores.service}</span></div>`:''}
+        <div class="score-item"><span class="score-label">${scoreLabel('family',p)}</span>${scoreBar(p.scores.family)}<span class="score-num">${p.scores.family}</span></div>
+        <div class="score-item"><span class="score-label">${scoreLabel('review',p)}</span>${scoreBar(p.scores.review)}<span class="score-num">${p.scores.review}</span></div>
+      </div>
+      <div class="amenities-row">${amenityIcons}</div>
+      <div class="cost-section" id="cost-${p.id}">${costsHTML(p,costs)}</div>
+      <div class="review-section">
+        <div class="review-positives">${p.reviewHighlights.positive.map(x=>`<div class="review-item pos">✅ ${x}</div>`).join('')}</div>
+        <div class="review-concerns">${p.reviewHighlights.concerns.map(x=>`<div class="review-item con">⚠️ ${x}</div>`).join('')}</div>
+        <div class="family-signal">👨‍👩‍👧 ${p.reviewHighlights.familySignal}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return;
+  let props = trip().properties.slice();
+  if (filters.tripMode === 'hotels') props = props.filter(p => !['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode === 'rentals') props = props.filter(p => ['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
+  props.forEach(p => {
+    const c = computeComposite(p);
+    const costs = computeCosts(p);
+    let existing = document.querySelector(`.prop-card[data-id="${p.id}"]`);
+    if (!existing) {
+      const div = document.createElement('div');
+      div.innerHTML = cardHTML(p);
+      grid.appendChild(div.firstElementChild);
+    } else {
+      existing.dataset.composite = c;
+      existing.dataset.effective = computeCosts(p).effective;
+    }
+  });
+  sortCards();
+}
+
+function sortCards() {
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return;
+  const cards = Array.from(grid.querySelectorAll('.prop-card'));
+  cards.sort((a,b) => {
+    if (filters.sort === 'composite') return parseFloat(b.dataset.composite) - parseFloat(a.dataset.composite);
+    if (filters.sort === 'effective') return parseFloat(a.dataset.effective) - parseFloat(b.dataset.effective);
+    if (filters.sort === 'gross') return parseFloat(a.dataset.gross) - parseFloat(b.dataset.gross);
+    return 0;
+  });
+  cards.forEach(c => grid.appendChild(c));
+}
+
+function refreshRoom(propId, idx) {
+  roomSelections[propId] = parseInt(idx);
+  const p = trip().properties.find(x=>x.id===propId);
+  if (!p) return;
+  const costs = computeCosts(p);
+  const el = document.getElementById('cost-'+propId);
+  if (el) el.innerHTML = costsHTML(p, costs);
+  const card = document.querySelector(`.prop-card[data-id="${propId}"]`);
+  if (card) {
+    card.dataset.effective = costs.effective;
+    card.dataset.gross = costs.gross;
+  }
+  if (filters.sort==='effective'||filters.sort==='gross') sortCards();
+  renderSummary();
+}
+
+function renderTop3() {
+  const sec = document.getElementById('top3-section');
+  if (!sec) return;
+  const props = trip().properties.slice()
+    .map(p => ({...p, composite: computeComposite(p)}))
+    .sort((a,b) => b.composite - a.composite)
+    .slice(0,3);
+
+  sec.innerHTML = '<h2 class="section-title">\u{1F3C6} Top 3 Recommendations</h2><div class="top3-grid">'
+    + props.map((p,i) => {
+      const costs = computeCosts(p);
+      const medals = ['\u{1F947}','\u{1F948}','\u{1F949}'];
+      return '<div class="top3-card">'
+        + (() => {
+        const bgStyle = p.photo
+          ? 'background-image:linear-gradient(to bottom,rgba(0,0,0,.05) 0%,rgba(0,0,0,.55) 100%),url(' + JSON.stringify(p.photo) + ');background-size:cover;background-position:center top;'
+          : 'background:' + p.photoGradient + ';';
+        return '<div class="top3-header" style="' + bgStyle + '">';
+      })()
+        + '<span class="top3-medal">' + medals[i] + '</span>'
+        + '<div class="top3-score-badge">' + p.composite + '</div>'
+        + '<div class="top3-name-overlay">' + p.name + '</div>'
+        + '</div>'
+        + '<div class="top3-body">'
+        + '<div class="top3-location">\u{1F4CD} ' + p.location + '</div>'
+        + '<div class="top3-cost">$' + costs.effectiveNightly.toLocaleString() + '/nt effective</div>'
+        + '<div class="top3-highlight">' + p.reviewHighlights.positive[0] + '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('')
+    + '</div>';
+}
+
+function renderSummary() {
+  const sec = document.getElementById('summary-section');
+  if (!sec) return;
+  const props = trip().properties;
+  const costs = props.map(p => computeCosts(p));
+  const min = Math.min(...costs.map(c=>c.effective));
+  const max = Math.max(...costs.map(c=>c.effective));
+  const avg = Math.round(costs.reduce((s,c)=>s+c.effective,0)/costs.length);
+  const best = props[costs.indexOf(costs.find(c=>c.effective===min))];
+  
+  sec.innerHTML = `<div class="summary-bar">
+    <div class="summary-item"><span class="summary-label">Properties</span><strong>${props.length}</strong></div>
+    <div class="summary-item"><span class="summary-label">Nights</span><strong>${trip().nights}</strong></div>
+    <div class="summary-item"><span class="summary-label">Best Value</span><strong>$${min.toLocaleString()}</strong></div>
+    <div class="summary-item"><span class="summary-label">Range</span><strong>$${min.toLocaleString()} – $${max.toLocaleString()}</strong></div>
+    <div class="summary-item"><span class="summary-label">Avg Effective</span><strong>$${avg.toLocaleString()}</strong></div>
+    <div class="summary-item"><span class="summary-label">Top Value Pick</span><strong>${best.name.split(' ').slice(0,3).join(' ')}</strong></div>
+  </div>`;
+}
+
+function refreshWeights(changedKey) {
+  const allKeys = ['location','design','service','family','review'];
+  if (changedKey) {
+    // Proportional redistribution so weights always sum to 100
+    const changedEl = document.getElementById('w-' + changedKey);
+    if (!changedEl) return;
+    const newVal = Math.min(100, Math.max(0, parseInt(changedEl.value)));
+    const remaining = 100 - newVal;
+    const otherKeys = allKeys.filter(k => k !== changedKey);
+    const otherTotal = otherKeys.reduce((sum, k) => sum + weights[k], 0);
+    weights[changedKey] = newVal;
+    if (otherTotal === 0) {
+      // Distribute evenly if all others are zero
+      const share = Math.floor(remaining / otherKeys.length);
+      let leftover = remaining;
+      otherKeys.forEach((k, i) => {
+        if (i === otherKeys.length - 1) { weights[k] = leftover; }
+        else { weights[k] = share; leftover -= share; }
+      });
+    } else {
+      // Proportional: scale others to fill remaining
+      let assigned = 0;
+      otherKeys.forEach((k, i) => {
+        if (i === otherKeys.length - 1) {
+          weights[k] = Math.max(0, remaining - assigned);
+        } else {
+          const proportion = weights[k] / otherTotal;
+          weights[k] = Math.max(0, Math.round(proportion * remaining));
+          assigned += weights[k];
+        }
+      });
+    }
+    // Sync all slider positions back
+    allKeys.forEach(k => {
+      const el = document.getElementById('w-' + k);
+      if (el) el.value = weights[k];
+    });
+  } else {
+    // No key = initial load; just read current slider values
+    allKeys.forEach(k => {
+      const el = document.getElementById('w-' + k);
+      if (el) weights[k] = parseInt(el.value);
+    });
+  }
+  // Update all labels
+  allKeys.forEach(k => {
+    const lbl = document.getElementById('wv-' + k);
+    if (lbl) lbl.textContent = weights[k] + '%';
+  });
+  // Re-render composite scores on all cards
+  trip().properties.forEach(p => {
+    const comp = computeComposite(p);
+    const card = document.querySelector(`.prop-card[data-id="${p.id}"]`);
+    if (card) {
+      card.dataset.composite = comp;
+      const overlay = card.querySelector('.card-score-overlay');
+      if (overlay) overlay.textContent = comp;
+    }
+  });
+  if (filters.sort==='composite') sortCards();
+  renderTop3();
+  renderSummary();
+}
+
+// ── Trip Management ──────────────────────────────────────
+function buildTripSelector() {
+  const sel = document.getElementById('trip-selector');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(allTrips).map(([id, t]) =>
+    `<option value="${id}" ${id===activeTripId?'selected':''}>${t.name || t.destination || id}</option>`
+  ).join('');
+}
+
+function switchTrip(id) {
+  if (!allTrips[id]) return;
+  activeTripId = id;
+  setActiveTripId(id);
+  weights = {...trip().defaultWeights};
+  roomSelections = {};
+  // sync sliders
+  ['location','design','service','family','review'].forEach(k => {
+    const el = document.getElementById('w-'+k);
+    if (el) { el.value = weights[k]; }
+    const lbl = document.getElementById('wv-'+k);
+    if (lbl) lbl.textContent = weights[k]+'%';
+  });
+  renderDashboard();
+}
+
+function renderDashboard() {
+  renderTop3();
+  renderCards();
+  renderSummary();
+}
+
+function showImportExport() {
+  const modal = document.getElementById('import-export-modal');
+  if (modal) { modal.style.display = 'flex'; refreshExportPreview(); }
+}
+
+function closeImportExport() {
+  const modal = document.getElementById('import-export-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function refreshExportPreview() {
+  const btn = document.getElementById('delete-trip-btn');
+  if (btn) btn.style.display = activeTripId === 'hawaii-2026' ? 'none' : 'inline-block';
+  const t = trip();
+  const exportData = {
+    tripId: activeTripId,
+    name: t.name || t.destination,
+    destination: t.destination,
+    nights: t.nights,
+    defaultWeights: t.defaultWeights,
+    nonNegotiables: t.nonNegotiables || [],
+    properties: t.properties
+  };
+  const box = document.getElementById('export-box');
+  if (box) box.value = JSON.stringify(exportData, null, 2);
+}
+
+function downloadTrip() {
+  const box = document.getElementById('export-box');
+  if (!box) return;
+  const t = trip();
+  const name = (t.name || t.destination || activeTripId).replace(/[^a-z0-9]/gi,'_');
+  const blob = new Blob([box.value], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lodging_trip_${name}.json`;
+  a.click();
+}
+
+function importTrip() {
+  const box = document.getElementById('import-box');
+  if (!box || !box.value.trim()) return;
+  let data;
+  try {
+    data = JSON.parse(box.value.trim());
+  } catch(e) {
+    alert('Invalid JSON — please paste the full trip JSON block.');
+    return;
+  }
+  // Validate required fields
+  if (!data.properties || !Array.isArray(data.properties) || !data.properties.length) {
+    alert('JSON must include a "properties" array with at least one property.');
+    return;
+  }
+  if (!data.tripId) data.tripId = 'trip-' + Date.now();
+  if (!data.nights) data.nights = formState.nights || 5;
+  if (!data.defaultWeights) data.defaultWeights = {location:20,design:20,service:30,family:15,review:15};
+  if (!data.nonNegotiables) data.nonNegotiables = [];
+
+  // Store it
+  allTrips[data.tripId] = data;
+  const extraTrips = {};
+  Object.keys(allTrips).forEach(k => {
+    if (!TRIPS[k]) extraTrips[k] = allTrips[k];
+  });
+  saveStoredTrips(extraTrips);
+
+  activeTripId = data.tripId;
+  setActiveTripId(activeTripId);
+  weights = {...data.defaultWeights};
+  roomSelections = {};
+
+  buildTripSelector();
+  closeImportExport();
+  box.value = '';
+  alert(`Trip "${data.name || data.destination || data.tripId}" imported successfully!`);
+  showDashboard();
+}
+
+function deleteCurrentTrip() {
+  const btn = document.getElementById('delete-trip-btn');
+  if (activeTripId === 'hawaii-2026') {
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (!confirm(`Delete trip "${trip().name || activeTripId}"?`)) return;
+  delete allTrips[activeTripId];
+  const extraTrips = {};
+  Object.keys(allTrips).forEach(k => {
+    if (!TRIPS[k]) extraTrips[k] = allTrips[k];
+  });
+  saveStoredTrips(extraTrips);
+  activeTripId = 'hawaii-2026';
+  setActiveTripId(activeTripId);
+  weights = {...trip().defaultWeights};
+  roomSelections = {};
+  buildTripSelector();
+  renderDashboard();
+  closeImportExport();
+}
+
+function applySort(val) {
+  filters.sort = val;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort===val));
+  sortCards();
+}
+
+function applyView(val) {
+  filters.view = val;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view===val));
+  if (val === 'table') {
+    renderTableView();
+  } else {
+    const grid = document.getElementById('cards-grid');
+    if (grid) {
+      grid.classList.remove('list-view','grid-view','table-view');
+      grid.classList.add(val === 'list' ? 'list-view' : 'grid-view');
+      grid.innerHTML = '';
+    }
+    renderCards();
+  }
+}
+
+function renderTableView() {
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return;
+  grid.className = 'cards-grid table-view';
+
+  let props = trip().properties.slice();
+  if (filters.tripMode === 'hotels') props = props.filter(p => !['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode === 'rentals') props = props.filter(p => ['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
+  props = props.map(p => ({...p, _comp: computeComposite(p), _costs: computeCosts(p)}));
+  props.sort((a,b) => {
+    if (filters.sort === 'composite') return b._comp - a._comp;
+    if (filters.sort === 'effective') return a._costs.effective - b._costs.effective;
+    if (filters.sort === 'gross') return a._costs.gross - b._costs.gross;
+    return 0;
+  });
+
+  const medals = ['\u{1F947}','\u{1F948}','\u{1F949}'];
+  const rows = props.map((p,i) => {
+    const prog = PROGRAM_CONFIG.find(x => x.id === p.loyaltyProgram);
+    const nnMet = trip().nonNegotiables.every(nn => p.amenities.includes(nn));
+    return '<tr class="tbl-row">'
+      + '<td class="tbl-rank">' + (i < 3 ? medals[i] : (i+1)) + '</td>'
+      + '<td class="tbl-name"><div class="tbl-prop-name">' + p.name + '</div>'
+      + '<div class="tbl-prop-sub">📍 ' + p.location + (p.allInclusive ? '  ·  All-Incl.' : '') + '</div></td>'
+      + '<td class="tbl-type">' + typeBadge(p) + '</td>'
+      + '<td class="tbl-score"><span class="tbl-score-num">' + p._comp + '</span></td>'
+      + '<td class="tbl-room"><div class="tbl-room-name">' + p._costs.room.name + '</div>'
+      + '<div class="tbl-room-sub">' + p._costs.room.beds + '  ·  ' + p._costs.room.sqft + 'ft²</div></td>'
+      + '<td class="tbl-eff"><strong class="tbl-eff-val">$' + p._costs.effectiveNightly.toLocaleString() + '</strong><span class="tbl-eff-label">/nt</span></td>'
+      + '<td class="tbl-gross">$' + p._costs.gross.toLocaleString() + '</td>'
+      + '<td class="tbl-prog">' + (prog ? '<span class="chip ' + prog.cls + ' active sm-chip">' + prog.label + '</span>' : '—') + '</td>'
+      + '<td class="tbl-nn">' + (nnMet ? '<span class="tbl-check">✓</span>' : '<span class="tbl-miss">✗</span>') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  grid.innerHTML = '<div class="tbl-scroll"><table class="prop-table">'
+    + '<thead><tr>'
+    + '<th></th>'
+    + '<th>Property</th>'
+    + '<th>Type</th>'
+    + '<th>Score</th>'
+    + '<th>Recommended Room</th>'
+    + '<th>Eff./nt</th>'
+    + '<th>Gross Total</th>'
+    + '<th>Program</th>'
+    + '<th title="Non-negotiables met">✓ Req.</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>';
+}
+
+function applyTripMode(val) {
+  filters.tripMode = val;
+  const grid = document.getElementById('cards-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  renderCards();
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode===val));
+}
+
+function renderAll() {
+  renderTop3();
+  const grid = document.getElementById('cards-grid');
+  if (grid) grid.innerHTML = '';
+  renderCards();
+  renderSummary();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+  buildTripSelector();
+  // Close calendar on outside click
+  document.addEventListener('click', function(e) {
+    // Use composedPath: when cal re-renders via innerHTML replacement the clicked
+    // element is detached before bubbling, so closest() returns null falsely.
+    if (calState.open) {
+      const path = e.composedPath ? e.composedPath() : [];
+      const insideCal = path.some(el =>
+        el.id === 'cal-popup' ||
+        (el.classList && el.classList.contains('date-range-wrap'))
+      );
+      if (!insideCal) toggleCalendar(false);
+    }
+    if (!e.target.closest('.dest-wrap') ) {
+      const dd = document.getElementById('dest-dropdown');
+      if (dd) dd.style.display='none';
+    }
+  });
+  
+  // Dest input handler
+  const destInput = document.getElementById('dest-input');
+  if (destInput) {
+    destInput.addEventListener('input', function() {
+      renderDestDropdown(filterDestinations(this.value));
+    });
+    destInput.addEventListener('keydown', function(e) {
+      if (e.key==='Enter') {
+        const first = document.querySelector('.dest-item');
+        if (first) first.click();
+      }
+    });
+  }
+  
+  // Custom non-neg enter key
+  const customInp = document.getElementById('custom-nonneg-input');
+  if (customInp) {
+    customInp.addEventListener('keydown', function(e) {
+      if (e.key==='Enter') addCustomNonNeg();
+    });
+  }
+  
+  // Render initial chip states
+  renderChips('all');
+});
+
+
+function toggleWeightsPanel(){
+  const p=document.getElementById('scoring-panel');
+  if(p) p.style.display=p.style.display==='none'?'block':'none';
+}
+
+// Help modal
+function showHelp() {
+  document.getElementById('help-overlay').style.display='flex';
+  switchHelpTab('start');
+}
+function closeHelp() {
+  document.getElementById('help-overlay').style.display='none';
+}
+function switchHelpTab(tab) {
+  ['start','scores','costs','share'].forEach(t => {
+    const pane = document.getElementById('hpane-'+t);
+    if (pane) pane.style.display = t===tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.modal-tab[data-htab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.htab === tab);
+  });
+}
+
+</script>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="help-overlay" style="display:none" onclick="if(event.target===this)closeHelp()">
+  <div class="modal-box help-modal-box">
+    <div class="modal-header">
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-htab="start" onclick="switchHelpTab('start')">🚀 Getting Started</button>
+        <button class="modal-tab" data-htab="scores" onclick="switchHelpTab('scores')">⚖️ Scores</button>
+        <button class="modal-tab" data-htab="costs" onclick="switchHelpTab('costs')">💰 Costs</button>
+        <button class="modal-tab" data-htab="share" onclick="switchHelpTab('share')">👥 Sharing</button>
+      </div>
+      <button class="modal-close" onclick="closeHelp()">✕</button>
+    </div>
+
+    <!-- Getting Started -->
+    <div id="hpane-start" class="help-pane" style="overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">How to use this tool</h3>
+      <div class="help-steps">
+        <div class="help-step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>Fill out the intake form</strong>
+            <p>Enter your destination (start typing for suggestions), select travel dates from the calendar, set your traveler count, and tap your must-haves and loyalty programs.</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>Click Generate Research →</strong>
+            <p>The form collapses and two action buttons appear — <em>Cowork Brief</em> for Cowork users, <em>Claude.ai Prompt</em> for everyone else. The Hawaii dashboard also loads as a live example.</p>
+          </div>
+        </div>
+        <div class="help-step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>Copy your prompt → paste into Claude</strong>
+            <p>Click <strong>🤖 Claude.ai Prompt</strong>, copy it, and paste into <a href="https://claude.ai" target="_blank" class="help-link">claude.ai</a> (free account works). Claude returns a ranked shortlist with scores and full cost breakdowns for your destination.</p>
+          </div>
+        </div>
+      </div>
+      <div class="help-tip">
+        <span class="tip-icon">💡</span>
+        <span>The <strong>pre-loaded Hawaii dashboard</strong> below is a live example — use it to explore scores, adjust weight sliders, switch room types, and see how the cost model works before running your own trip.</span>
+      </div>
+    </div>
+
+    <!-- Scores -->
+    <div id="hpane-scores" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">How scoring works</h3>
+      <p class="help-body">Each property is scored 0–10 across five dimensions, then combined into a 0–100 composite score using weighted averages.</p>
+      <div class="score-explainers">
+        <div class="score-exp-row"><span class="score-exp-label">📍 Location / Access</span><span class="score-exp-desc">Proximity to key areas, beach/pool access, ease of transportation, neighborhood quality</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">🎨 Design / Experience</span><span class="score-exp-desc">Architecture, room quality, aesthetic, unique features, overall wow factor</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">🛎️ Service</span><span class="score-exp-desc">Staff quality, responsiveness, personalization. <em>Excluded for villas/rentals — weight redistributed proportionally.</em></span></div>
+        <div class="score-exp-row"><span class="score-exp-label">👨‍👩‍👧 Family Suitability</span><span class="score-exp-desc">Fit for your traveler profile — age-appropriate amenities, safety, kids' programming</span></div>
+        <div class="score-exp-row"><span class="score-exp-label">⭐ Review Confidence</span><span class="score-exp-desc">Consumer signal quality — volume, recency, positive themes, recurring concerns</span></div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">🎚️</span>
+        <span>Use the <strong>Weights sliders</strong> in the dashboard to re-rank properties for your priorities. Romantic trip? Lower Family, raise Service. Adventure trip? Raise Location.</span>
+      </div>
+    </div>
+
+    <!-- Costs -->
+    <div id="hpane-costs" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">Understanding the cost breakdown</h3>
+      <p class="help-body">Every property shows a full cost rollup. The <strong>effective nightly rate</strong> is the most useful number for comparing properties — it's your real spend after all deductions.</p>
+      <div class="cost-formula">
+        <div class="formula-row">Nightly rate × nights <span class="formula-eq">= Base total</span></div>
+        <div class="formula-row">+ Local taxes (~15% in Hawaii) <span class="formula-eq">= Tax amount</span></div>
+        <div class="formula-row">+ Resort fee × nights <span class="formula-eq">= Resort fees</span></div>
+        <div class="formula-row divider">= <strong>Gross total</strong></div>
+        <div class="formula-row benefit-row">− Breakfast credit (FHR / Chase The Edit) <span class="formula-eq green">Deduction</span></div>
+        <div class="formula-row benefit-row">− Property F&amp;B / hotel credit <span class="formula-eq green">Deduction</span></div>
+        <div class="formula-row divider">= <strong>Effective total</strong></div>
+        <div class="formula-row">÷ nights <span class="formula-eq highlight">= Effective nightly ★</span></div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">💡</span>
+        <span>A $1,100/night property with Amex FHR (breakfast $80/day × 4 nights + $100 credit = $420 back) costs <strong>$680 effective</strong> — cheaper than a "cheaper" $900/night property with no benefits.</span>
+      </div>
+      <p class="help-body" style="margin-top:.75rem;">Select your loyalty programs and cards in the intake form. Only programs you hold are applied to the calculation. You can also switch room types on each property card — the cost updates instantly.</p>
+    </div>
+
+    <!-- Sharing -->
+    <div id="hpane-share" class="help-pane" style="display:none;overflow-y:auto;max-height:65vh;padding:1.25rem 1.5rem;">
+      <h3 class="help-title">Sharing with friends</h3>
+      <p class="help-body">Two people can use this tool in completely different ways:</p>
+      <div class="share-paths">
+        <div class="share-path">
+          <div class="share-path-title">⚡ Cowork Mode</div>
+          <div class="share-path-who">For: Tool owner with Cowork</div>
+          <div class="share-path-desc">Generates a compact brief. Paste directly into a Cowork session with Claude for a full research response and live dashboard.</div>
+        </div>
+        <div class="share-path">
+          <div class="share-path-title">🤖 Claude.ai Mode</div>
+          <div class="share-path-who">For: Friends with any Claude account</div>
+          <div class="share-path-desc">Generates a full research prompt with the scoring methodology embedded. Paste into <a href="https://claude.ai" target="_blank" class="help-link">claude.ai</a> (free account works). Claude returns a scored shortlist — no special setup required.</div>
+        </div>
+      </div>
+      <div class="help-tip" style="margin-top:1rem;">
+        <span class="tip-icon">📋</span>
+        <span>When sharing the Claude.ai prompt with friends, the full evaluation framework is embedded — so their results follow the same scoring standard, even without any prior context.</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Import / Export Modal -->
+<div id="import-export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;color:#e6edf3;font-size:18px;">⬆⬇ Import / Export Trips</h2>
+      <button onclick="closeImportExport()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <h3 style="color:#58a6ff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Export Current Trip</h3>
+      <p style="color:#8b949e;font-size:12px;margin-bottom:10px;">Share this JSON with someone — they paste it into Import below to get your full trip comparison.</p>
+      <textarea id="export-box" readonly style="width:100%;height:120px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#8b949e;font-size:11px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button onclick="downloadTrip()" style="background:#238636;border:none;color:#fff;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;">⬇ Download JSON</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('export-box').value).then(()=>alert('Copied!'))" style="background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;">📋 Copy to Clipboard</button>
+        <button onclick="deleteCurrentTrip()" id="delete-trip-btn" style="background:#da3633;border:none;color:#fff;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;">🗑 Delete Trip</button>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="color:#58a6ff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Import a Trip</h3>
+      <p style="color:#8b949e;font-size:12px;margin-bottom:10px;">Paste the JSON from Claude's research response, or from a shared export. The trip will be saved locally and added to your trip selector.</p>
+      <textarea id="import-box" placeholder="Paste trip JSON here..." style="width:100%;height:160px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:11px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+      <div style="margin-top:10px;">
+        <button onclick="importTrip()" style="background:#1f6feb;border:none;color:#fff;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;">⬆ Import Trip</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
