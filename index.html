@@ -410,10 +410,14 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 .card-photo-placeholder { height:100%; display:flex; align-items:center; justify-content:center; }
 .gallery-link { color:rgba(255,255,255,.8); font-size:.82rem; font-weight:600; border:1px solid rgba(255,255,255,.4); padding:.3rem .75rem; border-radius:6px; text-decoration:none; }
 .gallery-link:hover { background:rgba(255,255,255,.1); color:#fff; }
+.rental-meta { display:flex; gap:6px; flex-wrap:wrap; padding:6px 14px 2px; }
+.rental-meta span { font-size:11px; background:rgba(39,174,96,.12); border:1px solid rgba(39,174,96,.3); border-radius:10px; padding:2px 7px; color:#58d68d; font-weight:500; }
 .card-badges { position:absolute; top:.6rem; left:.6rem; display:flex; flex-wrap:wrap; gap:.3rem; }
 .card-score-overlay { position:absolute; top:.6rem; right:.6rem; background:rgba(0,0,0,.7); color:#fff; font-weight:800; font-size:1.3rem; padding:.2rem .5rem; border-radius:8px; backdrop-filter:blur(4px); }
 .tier-badge { font-size:.68rem; font-weight:700; padding:.2rem .5rem; border-radius:10px; background:rgba(0,0,0,.6); color:#f0c040; border:1px solid rgba(240,192,64,.3); backdrop-filter:blur(4px); }
 .type-badge { font-size:.68rem; font-weight:600; padding:.2rem .5rem; border-radius:10px; background:rgba(0,0,0,.6); color:#e6edf3; border:1px solid rgba(255,255,255,.2); backdrop-filter:blur(4px); }
+.type-badge.type-hotel { background:rgba(41,128,185,.75); border-color:rgba(41,128,185,.5); }
+.type-badge.type-rental { background:rgba(39,174,96,.75); border-color:rgba(39,174,96,.5); }
 .ai-badge { font-size:.68rem; font-weight:700; padding:.2rem .5rem; border-radius:10px; background:rgba(46,204,113,.2); color:#2ecc71; border:1px solid rgba(46,204,113,.3); }
 .card-body { padding:1rem; }
 .card-name { font-size:.95rem; font-weight:700; color:#e6edf3; margin:0 0 .3rem; }
@@ -696,6 +700,11 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 
 <!-- Output Actions (hidden until submit) -->
 <div id="output-actions" style="display:none">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+    <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;">Research:</span>
+    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-hotels" checked onchange="updateResearchTypes()"> Hotels</label>
+    <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="research-rentals" checked onchange="updateResearchTypes()"> Curated Rentals <span style="font-size:11px;color:var(--muted)">(Plum Guide, onefinestay)</span></label>
+  </div>
   <button class="action-btn primary" onclick="showModal('cowork')">⚡ Cowork Brief</button>
   <button class="action-btn secondary" onclick="showModal('claude')">🤖 Claude.ai Prompt</button>
 </div>
@@ -719,6 +728,11 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 
   <!-- Filter Bar -->
   <div id="filter-bar">
+    <div class="filter-group trip-selector-group">
+      <span class="filter-label">Trip:</span>
+      <select id="trip-selector" onchange="switchTrip(this.value)" style="background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:6px;padding:4px 8px;font-size:.8rem;cursor:pointer;"></select>
+      <button class="sort-btn" onclick="showImportExport()" title="Import or export trip data">⬆⬇ Trips</button>
+    </div>
     <div class="filter-group">
       <span class="filter-label">Sort:</span>
       <button class="sort-btn active" data-sort="composite" onclick="applySort('composite')">Score</button>
@@ -728,9 +742,8 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
     <div class="filter-group">
       <span class="filter-label">Type:</span>
       <button class="mode-btn active" data-mode="all" onclick="applyTripMode('all')">All</button>
-      <button class="mode-btn" data-mode="resort" onclick="applyTripMode('resort')">Resorts</button>
-      <button class="mode-btn" data-mode="boutique" onclick="applyTripMode('boutique')">Boutique</button>
-      <button class="mode-btn" data-mode="villa" onclick="applyTripMode('villa')">Villa/Rental</button>
+      <button class="mode-btn" data-mode="hotels" onclick="applyTripMode('hotels')">Hotels</button>
+      <button class="mode-btn" data-mode="rentals" onclick="applyTripMode('rentals')">Rentals</button>
     </div>
     <div class="filter-group">
       <button class="view-btn active" data-view="grid" onclick="applyView('grid')">▦ Grid</button>
@@ -1082,7 +1095,35 @@ let formState = {
   submitted: false
 };
 
-let weights = {...TRIPS['hawaii-2026'].defaultWeights};
+// ── Trip Storage ─────────────────────────────────────────
+const STORAGE_KEY = 'lodging_trips_v4';
+const ACTIVE_KEY  = 'lodging_active_v4';
+
+function loadStoredTrips() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch(e) { return {}; }
+}
+function saveStoredTrips(extra) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(extra)); } catch(e) {}
+}
+function getActiveTripId() {
+  return localStorage.getItem(ACTIVE_KEY) || 'hawaii-2026';
+}
+function setActiveTripId(id) {
+  localStorage.setItem(ACTIVE_KEY, id);
+}
+
+// Merge seed + stored trips; seed is always available as fallback
+const _storedTrips = loadStoredTrips();
+const allTrips = {...TRIPS, ..._storedTrips};  // TRIPS = seed (hawaii)
+let activeTripId = getActiveTripId();
+if (!allTrips[activeTripId]) activeTripId = 'hawaii-2026';
+
+function trip() { return allTrips[activeTripId]; }
+
+let weights = {...trip().defaultWeights};
 let roomSelections = {};
 let filters = {sort:'composite', view:'grid', tripMode:'all'};
 const calState = {open:false, month:new Date().getMonth(), year:new Date().getFullYear(), selecting:'start'};
@@ -1339,6 +1380,12 @@ function getNights() {
   return null;
 }
 
+function updateResearchTypes() {
+  // Used by prompt generators — reflects current checkbox state
+  formState.researchHotels = document.getElementById('research-hotels')?.checked ?? true;
+  formState.researchRentals = document.getElementById('research-rentals')?.checked ?? true;
+}
+
 function generateCoworkBrief() {
   const nights = getNights();
   const dateStr = formState.startDate && formState.endDate
@@ -1348,11 +1395,16 @@ function generateCoworkBrief() {
   const nonNegs = formState.nonNegotiables.map(n => n.startsWith('custom:') ? n.replace('custom:','') : (AMENITY_CONFIG.find(a=>a.id===n)||{label:n}).label).join(', ') || 'none';
   const programs = formState.programs.map(p => (PROGRAM_CONFIG.find(x=>x.id===p)||{label:p}).label).join(', ') || 'none';
   const lodging = formState.lodgingTypes.length ? formState.lodgingTypes.join(', ') : 'open to all types';
+  const researchScope = [
+    formState.researchHotels !== false ? 'Hotels & Resorts' : null,
+    formState.researchRentals !== false ? 'Curated Rentals (Plum Guide, onefinestay)' : null
+  ].filter(Boolean).join(' + ') || 'Hotels & Resorts';
   const budget = formState.budgetTier || 'not specified';
 
   return `LODGING RESEARCH REQUEST
 ========================
 Destination: ${formState.destination || '[not set]'}
+Research Scope: ${researchScope}
 Dates: ${dateStr}
 Travelers: ${travelers}
 Non-negotiables: ${nonNegs}
@@ -1386,7 +1438,56 @@ TASK: Research and evaluate the top lodging options for this trip using the Lodg
    - Review highlights: 3 positives, 2–3 concerns, family signal summary
    - Key amenities available
 
-4. Deliver: top 5–7 properties ranked by composite score with full detail above.`;
+4. For curated rentals, search Plum Guide (plumguide.com) and onefinestay (onefinestay.com) in addition to standard hotel brands.
+
+5. Deliver: top 5–7 properties ranked by composite score with full detail above.
+
+6. Also return an importable JSON block in this exact schema (for dashboard import):
+
+\`\`\`json
+{
+  "tripId": "destination-year",
+  "name": "Trip Name",
+  "destination": "City, Country",
+  "nights": N,
+  "defaultWeights": {"location":20,"design":20,"service":30,"family":15,"review":15},
+  "nonNegotiables": [],
+  "properties": [
+    {
+      "id": "unique-id",
+      "name": "Property Name",
+      "type": "resort|boutique|villa|apartment|house",
+      "platform": "plum_guide|onefinestay|vacasa|null",
+      "allInclusive": false,
+      "tier": "luxury|ultra-luxury|upscale",
+      "brand": "Brand Name",
+      "location": "Neighborhood, City",
+      "loyaltyProgram": "marriott|hilton|hyatt|amex_fhr|chase_edit|none",
+      "benefit": {"type":"none","bkfstPerDay":0,"credit":0,"notes":""},
+      "scores": {"location":0,"design":0,"service":0,"family":0,"review":0},
+      "taxRate": 0.00,
+      "resortFee": 0,
+      "cleaningFee": 0,
+      "serviceFeeRate": 0,
+      "bedrooms": null,
+      "bathrooms": null,
+      "maxGuests": null,
+      "hasKitchen": false,
+      "hasLaundry": false,
+      "amenities": [],
+      "rooms": [{"name":"Room Name","rate":0,"beds":"King","sqft":0,"familyRec":false}],
+      "photo": null,
+      "photoGradient": "linear-gradient(135deg,#1a3a2a,#2d6a4f,#74c69d)",
+      "galleryUrl": "https://",
+      "reviewHighlights": {
+        "positive": ["","",""],
+        "concerns": ["",""],
+        "familySignal": ""
+      }
+    }
+  ]
+}
+\`\`\``;
 }
 
 function generateClaudeAIPrompt() {
@@ -1398,9 +1499,13 @@ function generateClaudeAIPrompt() {
   const nonNegs = formState.nonNegotiables.map(n => n.startsWith('custom:') ? n.replace('custom:','') : (AMENITY_CONFIG.find(a=>a.id===n)||{label:n}).label).join(', ') || 'none';
   const programs = formState.programs.map(p => (PROGRAM_CONFIG.find(x=>x.id===p)||{label:p}).label).join(', ') || 'none';
   const lodging = formState.lodgingTypes.length ? formState.lodgingTypes.join(', ') : 'open to all types';
+  const researchScope = [
+    formState.researchHotels !== false ? 'Hotels & Resorts' : null,
+    formState.researchRentals !== false ? 'Curated Rentals (Plum Guide, onefinestay)' : null
+  ].filter(Boolean).join(' + ') || 'Hotels & Resorts';
   const budget = formState.budgetTier || 'not specified';
 
-  return `You are a luxury travel advisor using a structured evaluation framework. Research and evaluate lodging for the following trip, then return a scored shortlist with full cost breakdowns.
+  return `You are a luxury travel advisor using a structured evaluation framework. Search scope: ${researchScope}. Research and evaluate lodging for the following trip, then return a scored shortlist with full cost breakdowns.
 
 TRIP PARAMETERS
 ===============
@@ -1488,7 +1593,62 @@ Key amenities: [list]
 
 ---
 
-Deliver the top 5–7 properties ranked by composite score. Be specific with rates — use current published rates or clearly note if estimated.`;
+Deliver the top 5–7 properties ranked by composite score. Be specific with rates — use current published rates or clearly note if estimated.
+
+For curated rentals, include results from Plum Guide (plumguide.com) and onefinestay (onefinestay.com) alongside hotel brands. Score rental Service dimension as Host & Management Quality. For rentals, exclude the Service dimension from composite and redistribute its weight proportionally across the other four dimensions.
+
+---
+
+IMPORTABLE JSON OUTPUT
+======================
+After your narrative response, return a JSON block in exactly this schema so the results can be imported directly into the Lodging Evaluator dashboard:
+
+\`\`\`json
+{
+  "tripId": "destination-year",
+  "name": "Trip Name",
+  "destination": "City, Country",
+  "nights": ${nights || 5},
+  "defaultWeights": {"location":20,"design":20,"service":30,"family":15,"review":15},
+  "nonNegotiables": [],
+  "properties": [
+    {
+      "id": "unique-id",
+      "name": "Property Name",
+      "type": "resort|boutique|villa|apartment|house",
+      "platform": "plum_guide|onefinestay|vacasa|null",
+      "allInclusive": false,
+      "tier": "luxury|ultra-luxury|upscale",
+      "brand": "Brand Name",
+      "location": "Neighborhood, City",
+      "loyaltyProgram": "marriott|hilton|hyatt|amex_fhr|chase_edit|none",
+      "benefit": {"type":"none","bkfstPerDay":0,"credit":0,"notes":""},
+      "scores": {"location":0,"design":0,"service":0,"family":0,"review":0},
+      "taxRate": 0.00,
+      "resortFee": 0,
+      "cleaningFee": 0,
+      "serviceFeeRate": 0,
+      "bedrooms": null,
+      "bathrooms": null,
+      "maxGuests": null,
+      "hasKitchen": false,
+      "hasLaundry": false,
+      "amenities": ["pool","beach","spa","gym","restaurant","kids_club","kitchen","laundry","concierge","room_service"],
+      "rooms": [{"name":"Room Name","rate":0,"beds":"King","sqft":0,"familyRec":false}],
+      "photo": null,
+      "photoGradient": "linear-gradient(135deg,#1a3a2a,#2d6a4f,#74c69d)",
+      "galleryUrl": "https://",
+      "reviewHighlights": {
+        "positive": ["","",""],
+        "concerns": ["",""],
+        "familySignal": ""
+      }
+    }
+  ]
+}
+\`\`\`
+
+Fill in all values accurately. Use null for unknown numeric fields. The JSON block should be complete and valid — it will be pasted directly into the tool's Import panel.`;
 }
 
 // ============================================================
@@ -1597,6 +1757,18 @@ function toggleIntake() {
 // ============================================================
 // DASHBOARD — SCORING
 // ============================================================
+function scoreLabel(key, p) {
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const labels = {
+    location: 'Location / Access',
+    design:   'Design / Experience',
+    service:  isRental ? 'Host & Mgmt Quality' : 'Service Quality',
+    family:   'Family Suitability',
+    review:   'Review Confidence'
+  };
+  return labels[key] || key;
+}
+
 function computeComposite(p) {
   let wl=weights.location, wd=weights.design, ws=weights.service, wf=weights.family, wr=weights.review;
   if (p.type==='rental' || p.type==='villa') {
@@ -1617,10 +1789,14 @@ function getSelectedRoom(p) {
 function computeCosts(p) {
   const {room, idx} = getSelectedRoom(p);
   const nights = trip().nights;
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
   const baseTotal = room.rate * nights;
-  const taxes = Math.round(baseTotal * p.taxRate);
-  const resortFees = (p.resortFee || 0) * nights;
-  const gross = baseTotal + taxes + resortFees;
+  // Rental: add cleaning fee (one-time) + platform service fee
+  const cleaningFee = isRental ? (p.cleaningFee || 0) : 0;
+  const serviceFeeAmt = isRental ? Math.round((baseTotal + cleaningFee) * (p.serviceFeeRate || 0)) : 0;
+  const taxes = Math.round((baseTotal + cleaningFee + serviceFeeAmt) * p.taxRate);
+  const resortFees = isRental ? 0 : (p.resortFee || 0) * nights;
+  const gross = baseTotal + cleaningFee + serviceFeeAmt + taxes + resortFees;
   
   let benefitValue = 0;
   let benefitLines = [];
@@ -1650,7 +1826,7 @@ function computeCosts(p) {
   const effective = gross - benefitValue;
   const effectiveNightly = Math.round(effective / nights);
   
-  return {room, roomIdx:idx, baseTotal, taxes, resortFees, gross, benefitValue, benefitLines, effective, effectiveNightly, nights};
+  return {room, roomIdx:idx, baseTotal, cleaningFee, serviceFeeAmt, taxes, resortFees, gross, benefitValue, benefitLines, effective, effectiveNightly, nights, isRental};
 }
 
 // ============================================================
@@ -1678,6 +1854,8 @@ function costsHTML(p, c) {
   <div class="cost-rows">
     <div class="cost-row"><span>Base (${c.nights}nt × $${c.room.rate})</span><span>$${c.baseTotal.toLocaleString()}</span></div>
     <div class="cost-row"><span>Taxes (${Math.round(p.taxRate*100)}%)</span><span>$${c.taxes.toLocaleString()}</span></div>
+    ${c.cleaningFee ? `<div class="cost-row"><span>Cleaning fee (1×)</span><span>$${c.cleaningFee.toLocaleString()}</span></div>` : ''}
+    ${c.serviceFeeAmt ? `<div class="cost-row"><span>Platform service fee</span><span>$${c.serviceFeeAmt.toLocaleString()}</span></div>` : ''}
     ${c.resortFees ? `<div class="cost-row"><span>Resort fees</span><span>$${c.resortFees.toLocaleString()}</span></div>` : ''}
     <div class="cost-row gross"><span>Gross total</span><span>$${c.gross.toLocaleString()}</span></div>
     ${c.benefitLines.map(l=>`<div class="cost-row benefit"><span>${l.split(':')[0]}</span><span class="benefit-val">${l.split(':')[1]}</span></div>`).join('')}
@@ -1691,9 +1869,15 @@ function tierBadge(tier) {
   return `<span class="tier-badge tier-${tier.replace(/[\s-]/g,'_')}">${map[tier]||tier}</span>`;
 }
 
-function typeBadge(type) {
-  const map = {resort:'🏨 Resort',boutique:'🏡 Boutique',villa:'🏖️ Villa',rental:'🏠 Rental'};
-  return `<span class="type-badge">${map[type]||type}</span>`;
+function typeBadge(p) {
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const platformMap = {plum_guide:'Plum Guide',onefinestay:'onefinestay',vacasa:'Vacasa',airbnb:'Airbnb',vrbo:'VRBO'};
+  const typeMap = {resort:'🏨 Resort',boutique:'🏡 Boutique',villa:'🏖️ Villa',apartment:'🏢 Apartment',house:'🏠 House',rental:'🏠 Rental'};
+  const label = isRental && p.platform && platformMap[p.platform]
+    ? `🏠 ${platformMap[p.platform]}`
+    : (typeMap[p.type] || p.type);
+  const cls = isRental ? 'rental' : 'hotel';
+  return `<span class="type-badge type-${cls}">${label}</span>`;
 }
 
 function cardHTML(p) {
@@ -1701,6 +1885,15 @@ function cardHTML(p) {
   const costs = computeCosts(p);
   const prog = PROGRAM_CONFIG.find(x=>x.id===p.loyaltyProgram);
   
+  const isRental = ['villa','apartment','house','rental'].includes(p.type);
+  const rentalMeta = isRental ? (() => {
+    const parts = [];
+    if (p.bedrooms)  parts.push(`🛏 ${p.bedrooms}BR`);
+    if (p.hasKitchen) parts.push('🍳 Kitchen');
+    if (p.hasLaundry) parts.push('👕 Laundry');
+    if (p.maxGuests) parts.push(`👥 Up to ${p.maxGuests}`);
+    return parts.length ? `<div class="rental-meta">${parts.map(t=>`<span>${t}</span>`).join('')}</div>` : '';
+  })() : '';
   const amenityIcons = AMENITY_CONFIG.filter(a => p.amenities.includes(a.id))
     .map(a => `<span class="amenity-icon" title="${a.label}">${a.icon}</span>`).join('');
   
@@ -1717,7 +1910,7 @@ function cardHTML(p) {
       </div>
       <div class="card-badges">
         ${tierBadge(p.tier)}
-        ${typeBadge(p.type)}
+        ${typeBadge(p)}
         ${p.allInclusive ? '<span class="ai-badge">All-Inclusive</span>' : ''}
       </div>
       <div class="card-score-overlay">${comp}</div>
@@ -1725,13 +1918,14 @@ function cardHTML(p) {
     <div class="card-body">
       <h3 class="card-name">${p.name}</h3>
       <div class="card-location">📍 ${p.location}</div>
+      ${rentalMeta}
       ${prog ? `<div class="card-program chip ${prog.cls} active sm-chip">${prog.label}</div>` : ''}
       <div class="scores-grid">
-        <div class="score-item"><span class="score-label">Location</span>${scoreBar(p.scores.location)}<span class="score-num">${p.scores.location}</span></div>
-        <div class="score-item"><span class="score-label">Design</span>${scoreBar(p.scores.design)}<span class="score-num">${p.scores.design}</span></div>
-        ${p.type!=='rental'&&p.type!=='villa'?`<div class="score-item"><span class="score-label">Service</span>${scoreBar(p.scores.service)}<span class="score-num">${p.scores.service}</span></div>`:''}
-        <div class="score-item"><span class="score-label">Family</span>${scoreBar(p.scores.family)}<span class="score-num">${p.scores.family}</span></div>
-        <div class="score-item"><span class="score-label">Reviews</span>${scoreBar(p.scores.review)}<span class="score-num">${p.scores.review}</span></div>
+        <div class="score-item"><span class="score-label">${scoreLabel('location',p)}</span>${scoreBar(p.scores.location)}<span class="score-num">${p.scores.location}</span></div>
+        <div class="score-item"><span class="score-label">${scoreLabel('design',p)}</span>${scoreBar(p.scores.design)}<span class="score-num">${p.scores.design}</span></div>
+        ${!isRental?`<div class="score-item"><span class="score-label">${scoreLabel('service',p)}</span>${scoreBar(p.scores.service)}<span class="score-num">${p.scores.service}</span></div>`:''}
+        <div class="score-item"><span class="score-label">${scoreLabel('family',p)}</span>${scoreBar(p.scores.family)}<span class="score-num">${p.scores.family}</span></div>
+        <div class="score-item"><span class="score-label">${scoreLabel('review',p)}</span>${scoreBar(p.scores.review)}<span class="score-num">${p.scores.review}</span></div>
       </div>
       <div class="amenities-row">${amenityIcons}</div>
       <div class="cost-section" id="cost-${p.id}">${costsHTML(p,costs)}</div>
@@ -1748,7 +1942,9 @@ function renderCards() {
   const grid = document.getElementById('cards-grid');
   if (!grid) return;
   let props = trip().properties.slice();
-  if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
+  if (filters.tripMode === 'hotels') props = props.filter(p => !['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode === 'rentals') props = props.filter(p => ['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
   props.forEach(p => {
     const c = computeComposite(p);
     const costs = computeCosts(p);
@@ -1911,6 +2107,138 @@ function refreshWeights(changedKey) {
   renderSummary();
 }
 
+// ── Trip Management ──────────────────────────────────────
+function buildTripSelector() {
+  const sel = document.getElementById('trip-selector');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(allTrips).map(([id, t]) =>
+    `<option value="${id}" ${id===activeTripId?'selected':''}>${t.name || t.destination || id}</option>`
+  ).join('');
+}
+
+function switchTrip(id) {
+  if (!allTrips[id]) return;
+  activeTripId = id;
+  setActiveTripId(id);
+  weights = {...trip().defaultWeights};
+  roomSelections = {};
+  // sync sliders
+  ['location','design','service','family','review'].forEach(k => {
+    const el = document.getElementById('w-'+k);
+    if (el) { el.value = weights[k]; }
+    const lbl = document.getElementById('wv-'+k);
+    if (lbl) lbl.textContent = weights[k]+'%';
+  });
+  renderDashboard();
+}
+
+function renderDashboard() {
+  renderTop3();
+  renderCards();
+  renderSummary();
+}
+
+function showImportExport() {
+  const modal = document.getElementById('import-export-modal');
+  if (modal) { modal.style.display = 'flex'; refreshExportPreview(); }
+}
+
+function closeImportExport() {
+  const modal = document.getElementById('import-export-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function refreshExportPreview() {
+  const btn = document.getElementById('delete-trip-btn');
+  if (btn) btn.style.display = activeTripId === 'hawaii-2026' ? 'none' : 'inline-block';
+  const t = trip();
+  const exportData = {
+    tripId: activeTripId,
+    name: t.name || t.destination,
+    destination: t.destination,
+    nights: t.nights,
+    defaultWeights: t.defaultWeights,
+    nonNegotiables: t.nonNegotiables || [],
+    properties: t.properties
+  };
+  const box = document.getElementById('export-box');
+  if (box) box.value = JSON.stringify(exportData, null, 2);
+}
+
+function downloadTrip() {
+  const box = document.getElementById('export-box');
+  if (!box) return;
+  const t = trip();
+  const name = (t.name || t.destination || activeTripId).replace(/[^a-z0-9]/gi,'_');
+  const blob = new Blob([box.value], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `lodging_trip_${name}.json`;
+  a.click();
+}
+
+function importTrip() {
+  const box = document.getElementById('import-box');
+  if (!box || !box.value.trim()) return;
+  let data;
+  try {
+    data = JSON.parse(box.value.trim());
+  } catch(e) {
+    alert('Invalid JSON — please paste the full trip JSON block.');
+    return;
+  }
+  // Validate required fields
+  if (!data.properties || !Array.isArray(data.properties) || !data.properties.length) {
+    alert('JSON must include a "properties" array with at least one property.');
+    return;
+  }
+  if (!data.tripId) data.tripId = 'trip-' + Date.now();
+  if (!data.nights) data.nights = formState.nights || 5;
+  if (!data.defaultWeights) data.defaultWeights = {location:20,design:20,service:30,family:15,review:15};
+  if (!data.nonNegotiables) data.nonNegotiables = [];
+
+  // Store it
+  allTrips[data.tripId] = data;
+  const extraTrips = {};
+  Object.keys(allTrips).forEach(k => {
+    if (!TRIPS[k]) extraTrips[k] = allTrips[k];
+  });
+  saveStoredTrips(extraTrips);
+
+  activeTripId = data.tripId;
+  setActiveTripId(activeTripId);
+  weights = {...data.defaultWeights};
+  roomSelections = {};
+
+  buildTripSelector();
+  closeImportExport();
+  box.value = '';
+  alert(`Trip "${data.name || data.destination || data.tripId}" imported successfully!`);
+  showDashboard();
+}
+
+function deleteCurrentTrip() {
+  const btn = document.getElementById('delete-trip-btn');
+  if (activeTripId === 'hawaii-2026') {
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (!confirm(`Delete trip "${trip().name || activeTripId}"?`)) return;
+  delete allTrips[activeTripId];
+  const extraTrips = {};
+  Object.keys(allTrips).forEach(k => {
+    if (!TRIPS[k]) extraTrips[k] = allTrips[k];
+  });
+  saveStoredTrips(extraTrips);
+  activeTripId = 'hawaii-2026';
+  setActiveTripId(activeTripId);
+  weights = {...trip().defaultWeights};
+  roomSelections = {};
+  buildTripSelector();
+  renderDashboard();
+  closeImportExport();
+}
+
 function applySort(val) {
   filters.sort = val;
   document.querySelectorAll('.sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort===val));
@@ -1939,7 +2267,9 @@ function renderTableView() {
   grid.className = 'cards-grid table-view';
 
   let props = trip().properties.slice();
-  if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
+  if (filters.tripMode === 'hotels') props = props.filter(p => !['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode === 'rentals') props = props.filter(p => ['villa','apartment','house','rental'].includes(p.type));
+  else if (filters.tripMode !== 'all') props = props.filter(p => p.type === filters.tripMode);
   props = props.map(p => ({...p, _comp: computeComposite(p), _costs: computeCosts(p)}));
   props.sort((a,b) => {
     if (filters.sort === 'composite') return b._comp - a._comp;
@@ -1956,7 +2286,7 @@ function renderTableView() {
       + '<td class="tbl-rank">' + (i < 3 ? medals[i] : (i+1)) + '</td>'
       + '<td class="tbl-name"><div class="tbl-prop-name">' + p.name + '</div>'
       + '<div class="tbl-prop-sub">📍 ' + p.location + (p.allInclusive ? '  ·  All-Incl.' : '') + '</div></td>'
-      + '<td class="tbl-type"><span class="type-badge">' + p.type + '</span></td>'
+      + '<td class="tbl-type">' + typeBadge(p) + '</td>'
       + '<td class="tbl-score"><span class="tbl-score-num">' + p._comp + '</span></td>'
       + '<td class="tbl-room"><div class="tbl-room-name">' + p._costs.room.name + '</div>'
       + '<div class="tbl-room-sub">' + p._costs.room.beds + '  ·  ' + p._costs.room.sqft + 'ft²</div></td>'
@@ -2004,6 +2334,7 @@ function renderAll() {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
+  buildTripSelector();
   // Close calendar on outside click
   document.addEventListener('click', function(e) {
     // Use composedPath: when cal re-renders via innerHTML replacement the clicked
@@ -2179,6 +2510,36 @@ function switchHelpTab(tab) {
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- Import / Export Modal -->
+<div id="import-export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;padding:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 style="margin:0;color:#e6edf3;font-size:18px;">⬆⬇ Import / Export Trips</h2>
+      <button onclick="closeImportExport()" style="background:none;border:none;color:#8b949e;font-size:20px;cursor:pointer;">✕</button>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <h3 style="color:#58a6ff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Export Current Trip</h3>
+      <p style="color:#8b949e;font-size:12px;margin-bottom:10px;">Share this JSON with someone — they paste it into Import below to get your full trip comparison.</p>
+      <textarea id="export-box" readonly style="width:100%;height:120px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#8b949e;font-size:11px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;">
+        <button onclick="downloadTrip()" style="background:#238636;border:none;color:#fff;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;font-weight:600;">⬇ Download JSON</button>
+        <button onclick="navigator.clipboard.writeText(document.getElementById('export-box').value).then(()=>alert('Copied!'))" style="background:#21262d;border:1px solid #30363d;color:#e6edf3;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;">📋 Copy to Clipboard</button>
+        <button onclick="deleteCurrentTrip()" id="delete-trip-btn" style="background:#da3633;border:none;color:#fff;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px;">🗑 Delete Trip</button>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="color:#58a6ff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Import a Trip</h3>
+      <p style="color:#8b949e;font-size:12px;margin-bottom:10px;">Paste the JSON from Claude's research response, or from a shared export. The trip will be saved locally and added to your trip selector.</p>
+      <textarea id="import-box" placeholder="Paste trip JSON here..." style="width:100%;height:160px;background:#0d1117;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:11px;font-family:monospace;padding:10px;resize:vertical;box-sizing:border-box;"></textarea>
+      <div style="margin-top:10px;">
+        <button onclick="importTrip()" style="background:#1f6feb;border:none;color:#fff;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600;">⬆ Import Trip</button>
+      </div>
+    </div>
   </div>
 </div>
 
