@@ -367,9 +367,9 @@ body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-se
 .add-btn:hover { background:#388bfd; }
 .form-actions { margin-top:1.5rem; display:flex; align-items:center; gap:1rem; }
 .research-scope-row{display:flex;gap:16px;flex-wrap:wrap;padding:4px 0;}
-.scope-option{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);transition:border-color .15s;}
-.scope-option:hover{border-color:var(--accent);}
-.scope-option input[type=checkbox]{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;}
+.scope-option{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;padding:8px 14px;border:1px solid #30363d;border-radius:8px;background:#0d1117;color:#e6edf3;transition:border-color .15s;}
+.scope-option:hover{border-color:#58a6ff;}
+.scope-option input[type=checkbox]{width:15px;height:15px;accent-color:#58a6ff;cursor:pointer;}
 .submit-btn { padding:.7rem 2rem; background:linear-gradient(135deg,#1f6feb,#388bfd); border:none; color:#fff; border-radius:8px; font-size:1rem; font-weight:600; cursor:pointer; }
 .submit-btn:hover { background:linear-gradient(135deg,#388bfd,#58a6ff); transform:translateY(-1px); }
 .output-note { font-size:.8rem; color:#6e7681; }
@@ -1765,8 +1765,8 @@ function submitIntakeForm() {
 function toggleIntake() {
   const body = document.getElementById('intake-body');
   if (!body) return;
-  const open = body.style.display !== 'none';
-  body.style.display = open ? 'none' : 'block';
+  const isHidden = window.getComputedStyle(body).display === 'none';
+  body.style.display = isHidden ? 'block' : 'none';
 }
 
 // ============================================================
